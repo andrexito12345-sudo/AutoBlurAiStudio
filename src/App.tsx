@@ -661,6 +661,7 @@ export default function App() {
                 currentCount={tasks.length}
                 maxFilesAllowed={isPremium ? 50 : 10}
                 profile={profile}
+                isPremium={isPremium}
                 onOpenBilling={() => setIsBillingOpen(true)}
               />
             </div>

@@ -7,6 +7,7 @@ interface UploadZoneProps {
   currentCount: number;
   maxFilesAllowed: number;
   profile: UserProfile | null;
+  isPremium: boolean;
   onOpenBilling: () => void;
 }
 
@@ -15,6 +16,7 @@ export default function UploadZone({
   currentCount,
   maxFilesAllowed,
   profile,
+  isPremium,
   onOpenBilling
 }: UploadZoneProps) {
   const [isDragActive, setIsDragActive] = useState(false);
@@ -49,13 +51,10 @@ export default function UploadZone({
         continue;
       }
 
-      if (isAdvancedFormat) {
-        const isUltraPro = profile?.subscriptionPlan === 'ultra_pro';
-        if (!isUltraPro) {
-          setError(`El formato .${fileExt.toUpperCase()} es exclusivo del Plan Ultra Pro ($19.99/mes).`);
-          setPremiumRequiredError(true);
-          continue;
-        }
+      if (isAdvancedFormat && !isPremium) {
+        setError(`El formato .${fileExt.toUpperCase()} está disponible con cualquier plan de pago. Elige un plan para usarlo.`);
+        setPremiumRequiredError(true);
+        continue;
       }
 
       // Max size 10MB
@@ -134,7 +133,7 @@ export default function UploadZone({
           Arrastra y suelta tus fotos aquí
         </h3>
         <p className="mt-1 text-xs text-gray-400">
-          O haz clic para explorar tus archivos (Máximo 10 imágenes por lote)
+          O haz clic para explorar tus archivos (Máximo {maxFilesAllowed} imágenes por lote)
         </p>
         <div className="mt-4 flex flex-wrap gap-2 justify-center text-[10px] font-medium text-gray-500 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100">
           <span>PNG, JPG, JPEG, WEBP</span>
@@ -160,7 +159,7 @@ export default function UploadZone({
               className="flex items-center gap-1.5 rounded-lg bg-purple-600 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-purple-700 active:scale-95 transition-all shadow-sm shrink-0 cursor-pointer"
             >
               <Sparkles className="h-3 w-3 animate-pulse" />
-              <span>Mejorar a Ultra Pro</span>
+              <span>Ver planes</span>
             </button>
           )}
         </div>
