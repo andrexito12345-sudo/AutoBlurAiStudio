@@ -101,7 +101,13 @@ export default function BillingModal({
     }, 150);
 
     return () => clearTimeout(timer);
-  }, [isOpen, selectedPlan, profile, onClose]);
+    // Only re-prepare/re-render the PayPhone box when the modal opens or the plan
+    // changes. `profile` and `onClose` are intentionally excluded: the parent
+    // re-renders every second (trial countdown timer), which would otherwise
+    // re-run this effect, wipe #pp-button and re-mount the box every tick
+    // (visible flicker) while spamming /api/payphone/prepare.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, selectedPlan]);
 
   if (!isOpen) return null;
 
