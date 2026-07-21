@@ -1120,6 +1120,11 @@ export default function App() {
         <p className="text-[10px] text-gray-400 font-semibold tracking-wide uppercase">
           AutoBlur.ai © {new Date().getFullYear()} — Diseñado con precisión para una privacidad inteligente
         </p>
+        <div className="mt-2 flex items-center justify-center gap-4 text-[11px] text-gray-400">
+          <a href="/privacidad" className="hover:text-indigo-600 transition-colors">Política de Privacidad</a>
+          <span>·</span>
+          <a href="/terminos" className="hover:text-indigo-600 transition-colors">Términos y Condiciones</a>
+        </div>
       </footer>
 
       {/* SaaS Billing & Upgrade Modal */}
