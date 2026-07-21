@@ -393,14 +393,9 @@ export default function App() {
         progress: 100
       } : t));
 
-      // Increment processed images count in Firestore on client-side
-      if (user) {
-        const userRef = doc(db, 'users', user.uid);
-        const currentCount = profile?.imagesProcessedCount || 0;
-        await updateDoc(userRef, {
-          imagesProcessedCount: currentCount + 1
-        });
-      }
+      // NOTE: the processed-image counter is incremented server-side (admin) in
+      // /api/gemini/detect-faces. The client no longer writes it — Firestore rules
+      // block clients from modifying usage/plan fields.
 
     } catch (err: any) {
       console.error("Error drawing blurs:", err);

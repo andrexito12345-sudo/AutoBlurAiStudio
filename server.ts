@@ -4,7 +4,7 @@ import cors from 'cors';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI, Type } from '@google/genai';
 import { initializeApp as initializeAdminApp, getApps as getAdminApps } from 'firebase-admin/app';
-import { getFirestore as getAdminFirestore } from 'firebase-admin/firestore';
+import { getFirestore as getAdminFirestore, FieldValue } from 'firebase-admin/firestore';
 import { getAuth as getAdminAuth } from 'firebase-admin/auth';
 
 const PORT = 3000;
@@ -15,6 +15,47 @@ const adminApp = getAdminApps().length === 0
       projectId: 'gen-lang-client-0410784317'
     })
   : getAdminApps()[0];
+
+const PROJECT_ID = 'gen-lang-client-0410784317';
+const DATABASE_ID = 'ai-studio-autoblursaas-955fae40-4175-4078-8c61-673671b13f8d';
+
+// Admin Firestore (named database). Admin writes bypass security rules, so all
+// monetization state (plan, image counter) is written here server-side only —
+// never trusting the client. Clients can no longer self-grant plans or reset
+// their usage (see firestore.rules).
+const adminDb = getAdminFirestore(adminApp, DATABASE_ID);
+
+async function adminGetDoc(collection: string, docId: string): Promise<Record<string, any> | null> {
+  const snap = await adminDb.collection(collection).doc(docId).get();
+  return snap.exists ? (snap.data() as Record<string, any>) : null;
+}
+
+async function adminSetDoc(collection: string, docId: string, fields: Record<string, any>) {
+  await adminDb.collection(collection).doc(docId).set(fields, { merge: true });
+}
+
+// Server-authoritative access check. Mirrors the client's getPlanAccess but this
+// is the real gate. Creator/admin emails get unlimited access.
+const PAID_PLANS = ['daily', 'weekly', 'monthly', 'premium', 'ultra_pro', 'lifetime'];
+const PLAN_IMAGE_LIMITS: Record<string, number> = { daily: 50, weekly: 500, monthly: 2000 };
+const FREE_IMAGE_LIMIT = 10;
+const ADMIN_EMAILS = ['andrexito12345@gmail.com', 'abcdavila006@gmail.com'];
+
+function serverPlanAccess(userData: Record<string, any> | null, email?: string) {
+  const e = (email || '').toLowerCase().trim();
+  if (e && ADMIN_EMAILS.includes(e)) {
+    return { unlimited: true, blocked: false, limit: Infinity, count: userData?.imagesProcessedCount || 0 };
+  }
+  const plan = userData?.subscriptionPlan || 'free';
+  const exp = userData?.subscriptionExpiresAt;
+  const notExpired = exp === 'never' || (!!exp && new Date(exp) > new Date());
+  const paid = PAID_PLANS.includes(plan) && notExpired;
+  const limit = paid ? (userData?.imageLimit ?? PLAN_IMAGE_LIMITS[plan] ?? 2000) : FREE_IMAGE_LIMIT;
+  const count = userData?.imagesProcessedCount || 0;
+  const trialExpired = !paid && !!userData?.trialExpiresAt && new Date() > new Date(userData.trialExpiresAt);
+  const blocked = count >= limit || trialExpired;
+  return { unlimited: false, blocked, limit, count, paid, trialExpired };
+}
 
 // Helper to perform secure Firestore updates via Google's REST API using the user's verified client ID token
 async function updateFirestoreDocument(idToken: string, collection: string, docId: string, fields: Record<string, any>) {
@@ -200,6 +241,17 @@ async function startServer() {
         return res.status(400).json({ error: 'Missing image content' });
       }
 
+      // Server-authoritative plan/limit enforcement — do NOT trust the client.
+      const userData = await adminGetDoc('users', userId);
+      const access = serverPlanAccess(userData, (req as any).user?.email);
+      if (access.blocked) {
+        return res.status(403).json({
+          error: access.trialExpired
+            ? 'Tu prueba gratuita ha expirado. Elige un plan para continuar.'
+            : `Has alcanzado el límite de ${access.limit} imágenes de tu plan. Actualiza tu plan para continuar.`,
+        });
+      }
+
       // Clean base64 string
       let cleanBase64 = image;
       if (cleanBase64.includes(';base64,')) {
@@ -244,6 +296,18 @@ async function startServer() {
 
       const rawText = response.text || '[]';
       const faces = JSON.parse(rawText.trim());
+
+      // Count the processed image server-side (unless unlimited/creator). The
+      // client no longer writes this — the counter is now trusted.
+      if (!access.unlimited) {
+        try {
+          await adminDb.collection('users').doc(userId).update({
+            imagesProcessedCount: FieldValue.increment(1),
+          });
+        } catch (incErr) {
+          console.error('Failed to increment image counter:', incErr);
+        }
+      }
 
       res.json({ faces });
     } catch (error: any) {
@@ -300,8 +364,8 @@ async function startServer() {
       // Generate secure unique transaction ID
       const clientTransactionId = `${userId}-${planType}-${Date.now()}`;
 
-      // Save pending transaction document in Firestore (Client-auth-powered REST proxy)
-      await updateFirestoreDocument(idToken, 'transactions', clientTransactionId, {
+      // Save pending transaction document (admin write — clients cannot touch transactions)
+      await adminSetDoc('transactions', clientTransactionId, {
         userId,
         planType,
         amount,
@@ -343,8 +407,8 @@ async function startServer() {
         return res.status(400).json({ error: 'Falta el id de transacción o el identificador del cliente.' });
       }
 
-      // Fetch pending transaction from Firestore via REST proxy using user auth
-      const txData = await getFirestoreDocument(idToken, 'transactions', clientTransactionId);
+      // Fetch pending transaction (admin read)
+      const txData = await adminGetDoc('transactions', clientTransactionId);
 
       if (!txData) {
         return res.status(400).json({ error: 'Transacción no encontrada o inválida.' });
@@ -376,7 +440,7 @@ async function startServer() {
 
       if (!confirmResponse.ok) {
         console.error('Payphone Confirmation API failed:', confirmData);
-        await updateFirestoreDocument(idToken, 'transactions', clientTransactionId, {
+        await adminSetDoc('transactions', clientTransactionId, {
           status: 'failed',
           updatedAt: new Date().toISOString(),
           error: confirmData.message || 'Error en la verificación de PayPhone'
@@ -389,7 +453,7 @@ async function startServer() {
 
       if (!isApproved) {
         console.warn('Payphone Transaction not approved:', confirmData);
-        await updateFirestoreDocument(idToken, 'transactions', clientTransactionId, {
+        await adminSetDoc('transactions', clientTransactionId, {
           status: 'failed',
           updatedAt: new Date().toISOString(),
           error: confirmData.transactionStatus || 'No aprobado'
@@ -412,9 +476,9 @@ async function startServer() {
 
       const planName = txData.planType;
 
-      // Update user subscription via REST proxy using user auth.
-      // Reset the processed-image counter so the new pass starts fresh.
-      await updateFirestoreDocument(idToken, 'users', userId, {
+      // Upgrade the user (admin write). Reset the counter so the new pass starts fresh.
+      // This is the ONLY place a plan is granted — clients cannot write these fields.
+      await adminSetDoc('users', userId, {
         subscriptionPlan: planName,
         subscriptionExpiresAt: expiresAt,
         imageLimit: config.imageLimit,
@@ -422,7 +486,7 @@ async function startServer() {
       });
 
       // Mark transaction as confirmed
-      await updateFirestoreDocument(idToken, 'transactions', clientTransactionId, {
+      await adminSetDoc('transactions', clientTransactionId, {
         status: 'confirmed',
         updatedAt: new Date().toISOString(),
         payphoneId: id.toString()
