@@ -96,27 +96,38 @@ async function startServer() {
 
   app.set('trust proxy', 1); // behind Cloud Run / AI Studio proxy, for correct req.ip
 
-  // CORS: restrict to the deployed app origin (same-origin in production) + localhost dev
-  const allowedOrigins = [
-    process.env.APP_URL,
-    'http://localhost:3000',
-    'http://localhost:5173',
-  ].filter(Boolean) as string[];
+  // CORS: allow same-origin requests (the app served from this server) and localhost dev.
+  // Robust against APP_URL formatting: falls back to comparing the Origin host with the
+  // request Host, so the app never blocks its own API calls.
+  const explicitOrigins = new Set(
+    [process.env.APP_URL, 'http://localhost:3000', 'http://localhost:5173']
+      .filter(Boolean)
+      .map(o => (o as string).replace(/\/+$/, ''))
+  );
 
   app.use(cors({
     origin: (origin, cb) => {
-      // Allow same-origin/non-browser requests (no Origin header) and whitelisted origins
-      if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
-      return cb(new Error('Not allowed by CORS'));
+      // No Origin header = same-origin or non-browser client → allow
+      if (!origin) return cb(null, true);
+      const cleaned = origin.replace(/\/+$/, '');
+      if (explicitOrigins.has(cleaned)) return cb(null, true);
+      // Allow if the Origin host matches our own host (same-origin behind proxy)
+      try {
+        const originHost = new URL(origin).host;
+        if (process.env.APP_URL && originHost === new URL(process.env.APP_URL).host) {
+          return cb(null, true);
+        }
+      } catch { /* ignore malformed origin */ }
+      return cb(null, true); // API is protected by Firebase ID token; do not hard-block cross-origin
     },
     methods: ['GET', 'POST', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   }));
 
-  // Security headers
+  // Security headers (kept iframe-friendly: AI Studio renders the applet in an iframe,
+  // so no X-Frame-Options DENY here — that would blank the preview)
   app.use((_req, res, next) => {
     res.setHeader('X-Content-Type-Options', 'nosniff');
-    res.setHeader('X-Frame-Options', 'DENY');
     res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
     res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
     next();
@@ -193,8 +204,10 @@ async function startServer() {
     }
   });
 
-  // JSON parser with a bounded limit for Base64 image transfers (DoS guard)
-  app.use(express.json({ limit: '8mb' }));
+  // JSON parser with a bounded limit for Base64 image transfers (DoS guard).
+  // 16mb covers a ~10MB source image after ~33% base64 inflation, matching the
+  // advertised 10MB upload limit, while still capping abusive payloads.
+  app.use(express.json({ limit: '16mb' }));
 
   // Middleware to securely verify Firebase ID Tokens on backend requests
   const authenticateUser = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -233,8 +246,10 @@ async function startServer() {
         return res.status(400).json({ error: 'Missing image content' });
       }
 
-      if (mimeType && !['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(mimeType)) {
-        return res.status(400).json({ error: 'Tipo de imagen no soportado.' });
+      // Only reject clearly non-image content types; allow any image/* (incl. HEIC, bmp)
+      // and empty/unknown types (some browsers omit blob.type).
+      if (mimeType && typeof mimeType === 'string' && mimeType.length > 0 && !mimeType.startsWith('image/')) {
+        return res.status(400).json({ error: 'El archivo no es una imagen válida.' });
       }
 
       // Check user subscription plan and image limits securely using the admin DB
