@@ -721,18 +721,43 @@ export default function App() {
               <div className="lg:col-span-7 space-y-6 text-left">
                 
                 {/* Trust Badge */}
-                <div className="inline-flex items-center gap-2 rounded-full bg-emerald-50 border border-emerald-200 px-4 py-2 text-xs font-bold text-emerald-800 shadow-sm">
-                  <ShieldCheck className="h-4.5 w-4.5 text-emerald-600 animate-pulse" />
-                  <span>Protección de Datos Garantizada — Procesamiento Efímero Local</span>
+                <div className="inline-flex items-center gap-2.5 rounded-full bg-white border border-gray-200/80 px-4 py-1.5 text-xs font-semibold text-gray-700 shadow-sm">
+                  <span className="relative flex h-2 w-2">
+                    <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping"></span>
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
+                  </span>
+                  <span>Procesamiento efímero local · Tus fotos nunca se guardan</span>
                 </div>
-                
-                <h2 className="font-display text-5xl lg:text-6xl font-extrabold text-gray-900 tracking-tight leading-tight">
-                  La solución líder para <span className="text-indigo-600 relative inline-block">difuminar rostros</span> de forma automática y segura
+
+                <h2 className="font-display text-5xl lg:text-[3.75rem] font-extrabold text-gray-900 tracking-tight leading-[1.08]">
+                  La solución líder para{' '}
+                  <span className="bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 bg-clip-text text-transparent">difuminar rostros</span>{' '}
+                  de forma automática y segura
                 </h2>
-                
-                <p className="text-gray-600 text-lg leading-relaxed max-w-2xl">
-                  AutoBlur es el software profesional más avanzado para anonimizar fotos al instante. Diseñado bajo estrictas normativas de privacidad, detecta y censura rostros automáticamente con inteligencia artificial de última generación.
+
+                <p className="text-gray-600 text-lg leading-relaxed max-w-xl">
+                  El software profesional para anonimizar fotos al instante. Detecta y censura
+                  rostros automáticamente con IA de última generación — bajo estrictas normativas
+                  de privacidad.
                 </p>
+
+                {/* Credibility Stats */}
+                <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
+                  <div>
+                    <p className="text-2xl font-extrabold text-gray-900 tabular-nums tracking-tight">99.8%</p>
+                    <p className="text-xs text-gray-500 font-medium mt-0.5">Precisión de detección</p>
+                  </div>
+                  <div className="h-9 w-px bg-gray-200" />
+                  <div>
+                    <p className="text-2xl font-extrabold text-gray-900 tabular-nums tracking-tight">~3s</p>
+                    <p className="text-xs text-gray-500 font-medium mt-0.5">Por imagen</p>
+                  </div>
+                  <div className="h-9 w-px bg-gray-200" />
+                  <div>
+                    <p className="text-2xl font-extrabold text-gray-900 tracking-tight">GDPR · LOPD</p>
+                    <p className="text-xs text-gray-500 font-medium mt-0.5">Cumplimiento total</p>
+                  </div>
+                </div>
 
                 {/* Proof Bulletins */}
                 <div className="grid grid-cols-2 gap-4 pt-2">
@@ -781,14 +806,22 @@ export default function App() {
                 </div>
 
                 {/* Primary CTA Block */}
-                <div className="space-y-3 pt-4">
-                  <button
-                    onClick={handleSignIn}
-                    className="inline-flex items-center justify-center gap-3 rounded-2xl bg-indigo-600 px-8 py-4 text-sm font-bold text-white shadow-xl shadow-indigo-200 transition-all hover:bg-indigo-700 hover:scale-[1.02] active:scale-98 cursor-pointer"
-                  >
-                    <LogIn className="h-5 w-5" />
-                    <span>Comenzar Prueba Gratuita con Google</span>
-                  </button>
+                <div className="space-y-3 pt-2">
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <button
+                      onClick={handleSignIn}
+                      className="inline-flex items-center justify-center gap-2.5 rounded-2xl bg-gray-900 px-7 py-4 text-sm font-bold text-white shadow-xl shadow-gray-900/10 transition-all hover:bg-gray-800 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
+                    >
+                      <LogIn className="h-5 w-5" />
+                      <span>Comenzar gratis con Google</span>
+                    </button>
+                    <button
+                      onClick={() => window.scrollBy({ top: 640, behavior: 'smooth' })}
+                      className="inline-flex items-center justify-center gap-2 rounded-2xl border border-gray-200 bg-white px-6 py-4 text-sm font-semibold text-gray-700 transition-all hover:border-gray-300 hover:bg-gray-50 cursor-pointer"
+                    >
+                      Ver cómo funciona
+                    </button>
+                  </div>
                   <p className="text-xs text-gray-400 font-medium flex items-center gap-1.5">
                     <ShieldCheck className="h-4.5 w-4.5 text-emerald-500 shrink-0" />
                     Sin datos de tarjeta. Tu privacidad está blindada desde el primer segundo.
