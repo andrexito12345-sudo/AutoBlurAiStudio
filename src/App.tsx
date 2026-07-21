@@ -25,7 +25,10 @@ import {
   ChevronRight,
   Shield,
   Zap,
-  AlertTriangle
+  AlertTriangle,
+  Droplet,
+  Grid3x3,
+  SquareStack
 } from 'lucide-react';
 import { UserProfile, ProcessingTask, SubscriptionPlan } from './types';
 import Navbar from './components/Navbar';
@@ -917,29 +920,29 @@ export default function App() {
                     <div className="grid grid-cols-3 gap-1.5 bg-gray-50 p-1 rounded-xl border border-gray-100">
                       <button 
                         onClick={() => setDemoFilter('gaussian')}
-                        className={`py-2 px-1 text-[10px] font-bold rounded-lg transition-all cursor-pointer flex flex-col items-center gap-0.5 ${
+                        className={`py-2 px-1 text-[10px] font-bold rounded-lg transition-all cursor-pointer flex flex-col items-center gap-1 ${
                           demoFilter === 'gaussian' ? 'bg-white text-indigo-700 shadow-sm border border-gray-150' : 'text-gray-500 hover:text-gray-900'
                         }`}
                       >
-                        <span className="text-sm">💧</span>
+                        <Droplet className="h-3.5 w-3.5" />
                         <span>Gaussiano</span>
                       </button>
                       <button 
                         onClick={() => setDemoFilter('pixel')}
-                        className={`py-2 px-1 text-[10px] font-bold rounded-lg transition-all cursor-pointer flex flex-col items-center gap-0.5 ${
+                        className={`py-2 px-1 text-[10px] font-bold rounded-lg transition-all cursor-pointer flex flex-col items-center gap-1 ${
                           demoFilter === 'pixel' ? 'bg-white text-indigo-700 shadow-sm border border-gray-150' : 'text-gray-500 hover:text-gray-900'
                         }`}
                       >
-                        <span className="text-sm">🟩</span>
+                        <Grid3x3 className="h-3.5 w-3.5" />
                         <span>Mosaico</span>
                       </button>
                       <button 
                         onClick={() => setDemoFilter('censored')}
-                        className={`py-2 px-1 text-[10px] font-bold rounded-lg transition-all cursor-pointer flex flex-col items-center gap-0.5 ${
+                        className={`py-2 px-1 text-[10px] font-bold rounded-lg transition-all cursor-pointer flex flex-col items-center gap-1 ${
                           demoFilter === 'censored' ? 'bg-white text-indigo-700 shadow-sm border border-gray-150' : 'text-gray-500 hover:text-gray-900'
                         }`}
                       >
-                        <span className="text-sm">⬛</span>
+                        <SquareStack className="h-3.5 w-3.5" />
                         <span>Censura</span>
                       </button>
                     </div>
@@ -974,15 +977,19 @@ export default function App() {
             <div className="block lg:hidden text-center space-y-8">
               
               {/* Symmetrical Security Badge */}
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-100 px-3 py-1.5 text-xs font-bold text-emerald-800 shadow-xs mx-auto">
-                <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0" />
-                <span>Privacidad 100% Efímera y Local</span>
+              <div className="inline-flex items-center gap-2 rounded-full bg-white border border-gray-200/80 px-3.5 py-1.5 text-xs font-semibold text-gray-700 shadow-sm mx-auto">
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping"></span>
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
+                </span>
+                <span>Procesamiento local · Tus fotos nunca se guardan</span>
               </div>
 
               {/* Impactful Heading */}
               <div className="space-y-3">
-                <h2 className="font-display text-3xl sm:text-4xl font-extrabold text-gray-900 leading-tight">
-                  Protege la privacidad de tus fotos en <span className="text-indigo-600">segundos</span>
+                <h2 className="font-display text-3xl sm:text-4xl font-extrabold text-gray-900 leading-[1.12]">
+                  Protege la privacidad de tus fotos en{' '}
+                  <span className="bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 bg-clip-text text-transparent">segundos</span>
                 </h2>
                 <p className="text-sm text-gray-500 leading-relaxed max-w-md mx-auto">
                   La forma más rápida y segura de difuminar rostros de forma automática con inteligencia artificial. Tus archivos están protegidos en tu propio navegador.
@@ -1076,10 +1083,10 @@ export default function App() {
               <div className="space-y-4 pt-2">
                 <button
                   onClick={handleSignIn}
-                  className="w-full max-w-xs inline-flex items-center justify-center gap-2.5 rounded-2xl bg-indigo-600 px-6 py-4 text-sm font-bold text-white shadow-xl shadow-indigo-150 transition-all hover:bg-indigo-700 active:scale-97 cursor-pointer mx-auto"
+                  className="w-full max-w-xs inline-flex items-center justify-center gap-2.5 rounded-2xl bg-gray-900 px-6 py-4 text-sm font-bold text-white shadow-xl shadow-gray-900/10 transition-all hover:bg-gray-800 active:scale-97 cursor-pointer mx-auto"
                 >
                   <LogIn className="h-4.5 w-4.5" />
-                  <span>Comenzar Prueba Gratis</span>
+                  <span>Comenzar gratis con Google</span>
                 </button>
                 <div className="flex items-center justify-center gap-1.5 text-xs text-gray-500 max-w-xs mx-auto">
                   <ShieldCheck className="h-4.5 w-4.5 text-emerald-500 shrink-0" />
