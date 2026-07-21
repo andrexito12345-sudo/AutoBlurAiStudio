@@ -1,0 +1,31 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId} {
+      // Allow read only if the authenticated user is requesting their own document
+      allow read: if request.auth != null && request.auth.uid == userId;
+      
+      // Allow creation only if the authenticated user is creating their own document,
+      // and they are setting a safe initial state (trial, free, or basic subscription plan and 0 images processed)
+      allow create: if request.auth != null && request.auth.uid == userId 
+        && request.resource.data.uid == userId
+        && (request.resource.data.subscriptionPlan == 'trial' || request.resource.data.subscriptionPlan == 'free' || request.resource.data.subscriptionPlan == 'basic')
+        && request.resource.data.imagesProcessedCount == 0;
+        
+      // Allow update of non-sensitive profile fields (like displayName, photoURL), 
+      // but completely block changing subscription or limit fields from the client.
+      // These privileged fields must only be modified by the admin backend.
+      allow update: if request.auth != null && request.auth.uid == userId
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+             'subscriptionPlan', 
+             'subscriptionExpiresAt', 
+             'stripeCustomerId', 
+             'stripeSubscriptionId',
+             'imagesProcessedCount'
+           ]);
+           
+      // Completely block deletion of user profiles from the client to prevent resetting limits
+      allow delete: if false;
+    }
+  }
+}

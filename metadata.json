@@ -1,0 +1,6 @@
+{
+  "name": "AutoBlur SaaS",
+  "description": "Automatic AI-powered face blurring SaaS application with Google Authentication, subscription billing, and bulk image processing.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
