@@ -5,10 +5,21 @@ import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI, Type } from '@google/genai';
 import Stripe from 'stripe';
 import { initializeApp as initializeAdminApp, getApps as getAdminApps } from 'firebase-admin/app';
-import { getFirestore as getAdminFirestore } from 'firebase-admin/firestore';
+import { getFirestore as getAdminFirestore, FieldValue } from 'firebase-admin/firestore';
 import { getAuth as getAdminAuth } from 'firebase-admin/auth';
 
 const PORT = 3000;
+
+// Simple in-memory rate limiter (per key sliding window)
+const rateLimitStore = new Map<string, number[]>();
+function checkRateLimit(key: string, windowMs = 60000, maxRequests = 20): boolean {
+  const now = Date.now();
+  const hits = (rateLimitStore.get(key) || []).filter(t => now - t < windowMs);
+  if (hits.length >= maxRequests) return false;
+  hits.push(now);
+  rateLimitStore.set(key, hits);
+  return true;
+}
 
 // Initialize Firebase Admin (using Application Default Credentials or standard GCP roles)
 if (getAdminApps().length === 0) {
@@ -82,10 +93,35 @@ function getStripe(): Stripe | null {
 
 async function startServer() {
   const app = express();
-  
-  // CORS configuration
-  app.use(cors());
-  
+
+  app.set('trust proxy', 1); // behind Cloud Run / AI Studio proxy, for correct req.ip
+
+  // CORS: restrict to the deployed app origin (same-origin in production) + localhost dev
+  const allowedOrigins = [
+    process.env.APP_URL,
+    'http://localhost:3000',
+    'http://localhost:5173',
+  ].filter(Boolean) as string[];
+
+  app.use(cors({
+    origin: (origin, cb) => {
+      // Allow same-origin/non-browser requests (no Origin header) and whitelisted origins
+      if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+      return cb(new Error('Not allowed by CORS'));
+    },
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  }));
+
+  // Security headers
+  app.use((_req, res, next) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Frame-Options', 'DENY');
+    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+    next();
+  });
+
   // Use raw body parsing ONLY for Stripe webhooks to verify signatures correctly
   app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
     const stripe = getStripe();
@@ -157,8 +193,8 @@ async function startServer() {
     }
   });
 
-  // Standard JSON parser with high limit for Base64 image transfers
-  app.use(express.json({ limit: '50mb' }));
+  // JSON parser with a bounded limit for Base64 image transfers (DoS guard)
+  app.use(express.json({ limit: '8mb' }));
 
   // Middleware to securely verify Firebase ID Tokens on backend requests
   const authenticateUser = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -188,8 +224,17 @@ async function startServer() {
         return res.status(401).json({ error: 'Acceso no autorizado: No se pudo identificar al usuario.' });
       }
 
+      // Rate limit per authenticated user (protects Gemini cost from abuse)
+      if (!checkRateLimit(`faces:${userId}`, 60000, 20)) {
+        return res.status(429).json({ error: 'Demasiadas solicitudes. Espera un momento e inténtalo de nuevo.' });
+      }
+
       if (!image) {
         return res.status(400).json({ error: 'Missing image content' });
+      }
+
+      if (mimeType && !['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(mimeType)) {
+        return res.status(400).json({ error: 'Tipo de imagen no soportado.' });
       }
 
       // Check user subscription plan and image limits securely using the admin DB
@@ -256,17 +301,10 @@ async function startServer() {
       const rawText = response.text || '[]';
       const faces = JSON.parse(rawText.trim());
 
-      // If user ID was sent, increment their processed images counter securely
-      if (userId) {
-        const userRef = db.collection('users').doc(userId);
-        const userSnap = await userRef.get();
-        if (userSnap.exists) {
-          const currentCount = userSnap.data()?.imagesProcessedCount || 0;
-          await userRef.update({
-            imagesProcessedCount: currentCount + 1
-          });
-        }
-      }
+      // Atomically increment the processed images counter (race-safe)
+      await db.collection('users').doc(userId).update({
+        imagesProcessedCount: FieldValue.increment(1)
+      });
 
       res.json({ faces });
     } catch (error: any) {
@@ -280,11 +318,11 @@ async function startServer() {
         errorStr.includes('overloaded') ||
         errorStr.includes('service unavailable')
       ) {
-        return res.status(503).json({ 
-          error: 'El modelo de IA está experimentando una alta demanda temporal en este momento. Por favor, espera unos segundos e inténtalo de nuevo.' 
+        return res.status(503).json({
+          error: 'El modelo de IA está experimentando una alta demanda temporal en este momento. Por favor, espera unos segundos e inténtalo de nuevo.'
         });
       }
-      res.status(500).json({ error: error.message || 'Error processing face detection' });
+      res.status(500).json({ error: 'Error al procesar la detección de rostros.' });
     }
   });
 
@@ -297,6 +335,14 @@ async function startServer() {
 
       if (!userId || !email) {
         return res.status(400).json({ error: 'Missing userId or email in verified credentials' });
+      }
+
+      if (!checkRateLimit(`checkout:${userId}`, 60000, 10)) {
+        return res.status(429).json({ error: 'Demasiadas solicitudes de pago. Espera un momento.' });
+      }
+
+      if (!['monthly', 'annual', 'lifetime'].includes(planType)) {
+        return res.status(400).json({ error: 'Tipo de plan inválido.' });
       }
 
       const stripe = getStripe();
@@ -378,7 +424,7 @@ async function startServer() {
       res.json({ simulated: false, id: session.id, url: session.url });
     } catch (error: any) {
       console.error('Stripe Session Error:', error);
-      res.status(500).json({ error: error.message || 'Error initiating payment session' });
+      res.status(500).json({ error: 'Error al iniciar la sesión de pago.' });
     }
   });
 
@@ -390,6 +436,10 @@ async function startServer() {
 
       if (!userId || !plan) {
         return res.status(400).json({ error: 'Missing parameters' });
+      }
+
+      if (!['free', 'basic', 'premium', 'lifetime'].includes(plan)) {
+        return res.status(400).json({ error: 'Plan inválido.' });
       }
 
       const userRef = db.collection('users').doc(userId);
