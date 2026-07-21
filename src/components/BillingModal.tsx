@@ -64,45 +64,26 @@ export default function BillingModal({
           throw new Error(data.error || 'Error al preparar la transacción de PayPhone.');
         }
 
-        // Render the official PayPhone Payment Button Box
-        if ((window as any).payphone) {
-          (window as any).payphone.Button({
+        // Render the official PayPhone Payment Button Box (Cajita de Pagos v2).
+        // The v2 box exposes the global `PPaymentButtonBox` (NOT `window.payphone`),
+        // render() takes the element id WITHOUT the '#' prefix, and it confirms the
+        // payment via a REDIRECT to the configured "Url de respuesta" — not a JS
+        // callback. The redirect is handled on app load in App.tsx.
+        if ((window as any).PPaymentButtonBox) {
+          new (window as any).PPaymentButtonBox({
             token: data.token,
-            storeId: data.storeId,
             clientTransactionId: data.clientTransactionId,
             amount: data.amount,
             amountWithoutTax: data.amountWithoutTax,
-            tax: 0,
             amountWithTax: 0,
+            tax: 0,
+            service: 0,
+            tip: 0,
             currency: "USD",
+            storeId: data.storeId,
             reference: data.reference,
-            onComplete: async function(model: any, status: any) {
-              try {
-                const confirmResponse = await fetch('/api/payphone/confirm', {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${idToken}`
-                  },
-                  body: JSON.stringify({
-                    id: model.id,
-                    clientTransactionId: model.clientTransactionId
-                  })
-                });
-                
-                const result = await confirmResponse.json();
-                if (confirmResponse.ok && result.success) {
-                  alert(`¡Pago completado con éxito! Tu acceso ${selectedPlan === 'lifetime' ? 'De Por Vida' : 'Premium'} ha sido activado correctamente.`);
-                  onClose();
-                } else {
-                  alert(result.error || 'Ocurrió un error al verificar tu transacción en el servidor.');
-                }
-              } catch (err) {
-                console.error("Error confirming payphone payment:", err);
-                alert('No se pudo verificar el estado de tu transacción.');
-              }
-            }
-          }).render('#pp-button');
+            lang: "es"
+          }).render('pp-button');
         } else {
           setPrepareError('El SDK del portal de PayPhone no se cargó correctamente en el navegador.');
         }
