@@ -41,10 +41,30 @@ const PAID_PLANS = ['daily', 'weekly', 'monthly', 'premium', 'ultra_pro', 'lifet
 const PLAN_IMAGE_LIMITS: Record<string, number> = { daily: 50, weekly: 500, monthly: 2000 };
 const FREE_IMAGE_LIMIT = 10;
 
+// Creator/admin accounts: full unlimited access, no plan or limit checks.
+// Match is by the Google (Firebase auth) email the user signs in with, lowercased.
+// Add/remove emails here. This is intentionally invisible to normal users.
+const ADMIN_EMAILS = [
+  'andrexito12345@gmail.com',
+  'abcdavila006@gmail.com',
+];
+
 // Single source of truth for a user's current access: whether a paid pass is
 // active, how many images it allows, and whether they're blocked from processing.
 function getPlanAccess(profile: UserProfile | null, now: Date) {
   const plan = profile?.subscriptionPlan || 'free';
+  const count = profile?.imagesProcessedCount || 0;
+
+  // Creator override: unlimited everything, never blocked.
+  const email = (profile?.email || '').toLowerCase().trim();
+  if (email && ADMIN_EMAILS.includes(email)) {
+    return {
+      plan, isAdmin: true, isPaidActive: true, unlimited: true,
+      imageLimit: Infinity, count,
+      isTrialExpired: false, isLimitReached: false, isBlocked: false,
+    };
+  }
+
   const notExpired =
     profile?.subscriptionExpiresAt === 'never' ||
     (!!profile?.subscriptionExpiresAt && new Date(profile.subscriptionExpiresAt) > now);
@@ -52,12 +72,11 @@ function getPlanAccess(profile: UserProfile | null, now: Date) {
   const imageLimit = isPaidActive
     ? (profile?.imageLimit ?? PLAN_IMAGE_LIMITS[plan] ?? 2000)
     : FREE_IMAGE_LIMIT;
-  const count = profile?.imagesProcessedCount || 0;
   const isTrialExpired =
     !isPaidActive && !!profile?.trialExpiresAt && now > new Date(profile.trialExpiresAt);
   const isLimitReached = count >= imageLimit;
   const isBlocked = isLimitReached || isTrialExpired;
-  return { plan, isPaidActive, imageLimit, count, isTrialExpired, isLimitReached, isBlocked };
+  return { plan, isAdmin: false, isPaidActive, unlimited: false, imageLimit, count, isTrialExpired, isLimitReached, isBlocked };
 }
 
 export default function App() {
@@ -449,6 +468,8 @@ export default function App() {
 
   const access = getPlanAccess(profile, currentTime);
   const isPremium = access.isPaidActive;
+  const isAdmin = access.isAdmin;
+  const isUnlimited = access.unlimited;
   const imageLimit = access.imageLimit;
   const isTrialExpired = access.isTrialExpired;
   const isBlocked = access.isBlocked;
@@ -575,7 +596,7 @@ export default function App() {
                   <div className="rounded-2xl bg-white/10 backdrop-blur-sm border border-white/15 px-4 py-3 min-w-[150px]">
                     <p className="text-[10px] font-bold uppercase tracking-wider text-indigo-100">Tu Plan</p>
                     <p className="text-base font-extrabold text-white mt-1 flex items-center gap-1.5">
-                      {getPlanDisplayName(profile.subscriptionPlan)}
+                      {isAdmin ? 'Creador' : getPlanDisplayName(profile.subscriptionPlan)}
                       {isPremium && <Zap className="h-4 w-4 text-amber-300 fill-amber-300 shrink-0" />}
                     </p>
                   </div>
@@ -583,12 +604,14 @@ export default function App() {
                     <p className="text-[10px] font-bold uppercase tracking-wider text-indigo-100">Imágenes</p>
                     <p className="text-base font-extrabold text-white mt-1">
                       {profile.imagesProcessedCount}
-                      <span className="text-indigo-200 text-xs font-medium"> / {imageLimit}</span>
+                      {isUnlimited
+                        ? <span className="text-indigo-200 text-xs font-medium"> · Ilimitado</span>
+                        : <span className="text-indigo-200 text-xs font-medium"> / {imageLimit}</span>}
                     </p>
                     <div className="mt-2 h-1.5 w-full rounded-full bg-white/20 overflow-hidden">
                       <div
                         className="h-full rounded-full bg-white transition-all duration-500"
-                        style={{ width: `${Math.min(100, ((profile.imagesProcessedCount || 0) / imageLimit) * 100)}%` }}
+                        style={{ width: isUnlimited ? '100%' : `${Math.min(100, ((profile.imagesProcessedCount || 0) / imageLimit) * 100)}%` }}
                       />
                     </div>
                   </div>
