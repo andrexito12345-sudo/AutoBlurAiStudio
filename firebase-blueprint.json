@@ -1,0 +1,33 @@
+{
+  "collections": {
+    "users": {
+      "description": "User profiles containing subscriptions, trial timelines, and image processing metrics.",
+      "schema": {
+        "uid": "string",
+        "email": "string",
+        "displayName": "string",
+        "photoURL": "string?",
+        "subscriptionPlan": "trial | free | basic | premium | lifetime",
+        "trialStartedAt": "string? (ISO)",
+        "trialExpiresAt": "string? (ISO)",
+        "subscriptionExpiresAt": "string? (ISO or 'never')",
+        "imagesProcessedCount": "number"
+      }
+    },
+    "transactions": {
+      "description": "Transactions log holding pending and completed payment transactions.",
+      "schema": {
+        "userId": "string",
+        "planType": "monthly | annual | lifetime",
+        "amount": "number (in cents)",
+        "status": "pending | confirmed | failed",
+        "createdAt": "string (ISO)",
+        "updatedAt": "string? (ISO)",
+        "payphoneId": "number? (string/integer)"
+      }
+    }
+  },
+  "rules": {
+    "path": "firestore.rules"
+  }
+}

@@ -28,7 +28,10 @@ export default function Navbar({
         {/* Brand Logo */}
         <div className="flex items-center gap-3">
           <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-md shadow-indigo-200">
-            <Sparkles className="h-5 w-5 animate-pulse" />
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 animate-pulse">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              <circle cx="12" cy="11" r="3" />
+            </svg>
             <div className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-emerald-400 border-2 border-white"></div>
           </div>
           <div>
@@ -44,33 +47,54 @@ export default function Navbar({
           {user && profile ? (
             <div className="flex items-center gap-3 sm:gap-4">
               {/* Subscription Status Badge */}
-              <button
-                onClick={onOpenBilling}
-                className={`hidden md:flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold shadow-sm transition-all hover:scale-105 active:scale-95 ${
-                  profile.subscriptionPlan === 'premium'
-                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/50 hover:bg-emerald-100'
-                    : isTrialActive
-                    ? 'bg-amber-50 text-amber-700 border border-amber-200/50 hover:bg-amber-100'
-                    : 'bg-gray-100 text-gray-700 border border-gray-200 hover:bg-gray-200'
-                }`}
-              >
-                {profile.subscriptionPlan === 'premium' ? (
-                  <>
-                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
-                    <span>Plan Premium Activo</span>
-                  </>
-                ) : isTrialActive ? (
-                  <>
-                    <Sparkles className="h-3.5 w-3.5 text-amber-500" />
-                    <span>Prueba Gratuita ({imagesRemaining} disp.)</span>
-                  </>
-                ) : (
-                  <>
-                    <ShieldAlert className="h-3.5 w-3.5 text-gray-500" />
-                    <span>Plan Básico</span>
-                  </>
-                )}
-              </button>
+              {(() => {
+                const isPremiumActive = !!(
+                  profile &&
+                  (profile.subscriptionPlan === 'premium' || profile.subscriptionPlan === 'lifetime') &&
+                  (profile.subscriptionExpiresAt === 'never' || (profile.subscriptionExpiresAt && new Date(profile.subscriptionExpiresAt) > new Date()))
+                );
+                const isTrialActive = profile?.subscriptionPlan === 'trial';
+                const imagesRemaining = profile ? Math.max(0, 10 - profile.imagesProcessedCount) : 10;
+
+                return (
+                  <button
+                    onClick={onOpenBilling}
+                    className={`hidden md:flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold shadow-sm transition-all hover:scale-105 active:scale-95 ${
+                      isPremiumActive
+                        ? profile.subscriptionPlan === 'lifetime'
+                          ? 'bg-purple-50 text-purple-700 border border-purple-200/50 hover:bg-purple-100'
+                          : 'bg-emerald-50 text-emerald-700 border border-emerald-200/50 hover:bg-emerald-100'
+                        : isTrialActive && profile.imagesProcessedCount < 10
+                        ? 'bg-amber-50 text-amber-700 border border-amber-200/50 hover:bg-amber-100'
+                        : 'bg-gray-100 text-gray-700 border border-gray-200 hover:bg-gray-200'
+                    }`}
+                  >
+                    {isPremiumActive ? (
+                      profile.subscriptionPlan === 'lifetime' ? (
+                        <>
+                          <Sparkles className="h-3.5 w-3.5 text-purple-500 animate-pulse" />
+                          <span>Plan De Por Vida Activo</span>
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                          <span>Plan Premium Activo</span>
+                        </>
+                      )
+                    ) : isTrialActive && profile.imagesProcessedCount < 10 ? (
+                      <>
+                        <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+                        <span>Prueba Gratuita ({imagesRemaining} disp.)</span>
+                      </>
+                    ) : (
+                      <>
+                        <ShieldAlert className="h-3.5 w-3.5 text-gray-500" />
+                        <span>Plan Básico</span>
+                      </>
+                    )}
+                  </button>
+                );
+              })()}
 
               {/* User Avatar & Name */}
               <div className="flex items-center gap-2.5 rounded-lg border border-gray-100 bg-gray-50/50 p-1.5 pr-3">

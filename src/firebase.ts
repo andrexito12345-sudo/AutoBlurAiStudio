@@ -56,13 +56,34 @@ export async function getOrCreateUserProfile(user: User): Promise<UserProfile> {
   const userSnap = await getDoc(userRef);
 
   if (userSnap.exists()) {
-    return userSnap.data() as UserProfile;
+    const data = userSnap.data() as UserProfile;
+    // Migrate old 7-day trials to 24-hour trials for accuracy
+    if (data.subscriptionPlan === 'trial' || data.subscriptionPlan === 'free' || data.subscriptionPlan === 'basic') {
+      const now = new Date();
+      const expires = data.trialExpiresAt ? new Date(data.trialExpiresAt) : null;
+      
+      // If the trial was set for a longer duration (like the old 7 days),
+      // reset it to a fresh 24 hours from now to allow perfect testing of the new 24-hour rule
+      if (!expires || (expires.getTime() - now.getTime() > 24 * 60 * 60 * 1000)) {
+        const freshExpires = new Date();
+        freshExpires.setHours(now.getHours() + 24);
+        
+        data.trialStartedAt = now.toISOString();
+        data.trialExpiresAt = freshExpires.toISOString();
+        
+        await updateDoc(userRef, {
+          trialStartedAt: data.trialStartedAt,
+          trialExpiresAt: data.trialExpiresAt
+        });
+      }
+    }
+    return data;
   }
 
-  // Create new user profile with 7-day free trial starting now
+  // Create new user profile with 24-hour free trial starting now
   const now = new Date();
   const expires = new Date();
-  expires.setDate(now.getDate() + 7); // 7 days free trial
+  expires.setHours(now.getHours() + 24); // 24 hours free trial
 
   const newProfile: UserProfile = {
     uid: user.uid,

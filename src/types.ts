@@ -1,4 +1,4 @@
-export type SubscriptionPlan = 'free' | 'trial' | 'basic' | 'premium' | 'lifetime';
+export type SubscriptionPlan = 'free' | 'trial' | 'basic' | 'premium' | 'ultra_pro' | 'lifetime';
 
 export interface UserProfile {
   uid: string;
@@ -22,6 +22,7 @@ export interface ProcessingTask {
   originalUrl?: string; // Data URL or Object URL
   processedUrl?: string; // Data URL of the blurred image
   facesCount?: number;
+  faces?: FaceBoundingBox[];
   error?: string;
   progress: number; // 0 to 100
 }

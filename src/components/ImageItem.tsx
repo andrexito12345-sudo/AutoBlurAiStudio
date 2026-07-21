@@ -9,7 +9,12 @@ import {
   EyeOff, 
   Sliders, 
   Loader2,
-  Lock
+  Lock,
+  RefreshCw,
+  Maximize2,
+  X,
+  ArrowRight,
+  Undo2
 } from 'lucide-react';
 import { ProcessingTask } from '../types';
 import { BlurConfig } from '../utils/imageHelper';
@@ -18,21 +23,25 @@ interface ImageItemProps {
   key?: string;
   task: ProcessingTask;
   onRemove: (id: string) => void;
-  onProcess: (id: string, config: BlurConfig) => Promise<void>;
+  onProcess: (id: string, config: BlurConfig, forceRedetect?: boolean) => Promise<void>;
   isPremium: boolean;
+  isBlocked?: boolean;
+  onOpenBilling?: () => void;
 }
 
 export default function ImageItem({
   task,
   onRemove,
   onProcess,
-  isPremium
+  isPremium,
+  isBlocked,
+  onOpenBilling
 }: ImageItemProps) {
-  // Blur configuration specific to this image
   const [blurStyle, setBlurStyle] = useState<'gaussian' | 'pixelated' | 'censored'>('gaussian');
   const [intensity, setIntensity] = useState<number>(15);
   const [viewOriginal, setViewOriginal] = useState<boolean>(false);
   const [isProcessingLocal, setIsProcessingLocal] = useState<boolean>(false);
+  const [isLightboxOpen, setIsLightboxOpen] = useState<boolean>(false);
 
   // Auto-retrigger blur calculation when config changes and faces are already detected
   useEffect(() => {
@@ -56,6 +65,18 @@ export default function ImageItem({
     await onProcess(task.id, { style: blurStyle, intensity });
   };
 
+  const handleForceRegenerate = async () => {
+    setIsProcessingLocal(true);
+    try {
+      // Force face re-detection from Gemini API
+      await onProcess(task.id, { style: blurStyle, intensity }, true);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsProcessingLocal(false);
+    }
+  };
+
   const formatSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -64,60 +85,66 @@ export default function ImageItem({
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   };
 
-  // Determine which image URL to display
   const displayUrl = viewOriginal ? task.originalUrl : (task.processedUrl || task.originalUrl);
 
   return (
-    <div className="flex flex-col lg:flex-row gap-5 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm hover:shadow-md transition-all">
+    <div className="flex flex-col lg:flex-row gap-5 rounded-3xl border border-gray-100 bg-white p-5 shadow-sm hover:shadow-md transition-all duration-300">
       
-      {/* Image Preview Container */}
-      <div className="relative aspect-video w-full lg:w-64 rounded-xl overflow-hidden bg-gray-50 border border-gray-100 group shrink-0">
+      {/* Thumbnail Container */}
+      <div 
+        onClick={() => { if (task.status === 'completed') setIsLightboxOpen(true); }}
+        className={`relative aspect-[4/3] w-full lg:w-52 rounded-2xl overflow-hidden bg-gray-50 border border-gray-100 group shrink-0 ${task.status === 'completed' ? 'cursor-zoom-in' : ''}`}
+      >
         <img
           src={displayUrl}
           alt={task.name}
-          className="h-full w-full object-contain transition-all duration-200"
+          referrerPolicy="no-referrer"
+          className="h-full w-full object-contain transition-all duration-300 group-hover:scale-[1.01]"
         />
 
-        {/* View Toggle Overlay (only when processedUrl exists) */}
-        {task.processedUrl && (
+        {/* Hover Zoom-in cue for completed images */}
+        {task.status === 'completed' && (
+          <div className="absolute inset-0 bg-gray-900/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+            <span className="flex items-center gap-1.5 rounded-full bg-white/90 backdrop-blur-md px-3 py-1.5 text-[11px] font-bold text-gray-800 shadow-lg">
+              <Maximize2 className="h-3.5 w-3.5 text-indigo-600" />
+              <span>Comparar y Ajustar</span>
+            </span>
+          </div>
+        )}
+
+        {/* View Toggle Overlay (only when processedUrl exists and not hovering inside card) */}
+        {task.processedUrl && !isLightboxOpen && (
           <button
             onMouseDown={() => setViewOriginal(true)}
             onMouseUp={() => setViewOriginal(false)}
             onMouseLeave={() => setViewOriginal(false)}
             onTouchStart={() => setViewOriginal(true)}
             onTouchEnd={() => setViewOriginal(false)}
-            className="absolute bottom-3 left-3 flex items-center gap-1 rounded-lg bg-gray-900/75 backdrop-blur-xs px-2.5 py-1.5 text-[10px] font-bold text-white uppercase tracking-wider select-none active:bg-indigo-600 transition-all cursor-pointer"
+            onClick={(e) => e.stopPropagation()}
+            className="absolute bottom-3 left-3 flex items-center gap-1 rounded-lg bg-gray-900/80 backdrop-blur-xs px-2 py-1 text-[9px] font-bold text-white uppercase tracking-wider select-none active:bg-indigo-600 transition-all cursor-pointer"
+            title="Mantén pulsado para comparar con el original"
           >
-            {viewOriginal ? (
-              <>
-                <EyeOff className="h-3.5 w-3.5" />
-                <span>Original</span>
-              </>
-            ) : (
-              <>
-                <Eye className="h-3.5 w-3.5" />
-                <span>Mantén presionado para ver original</span>
-              </>
-            )}
+            {viewOriginal ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+            <span>{viewOriginal ? 'Original' : 'Ver Original'}</span>
           </button>
         )}
 
         {/* Status Badges Overlay */}
         <div className="absolute top-3 left-3 flex gap-1.5 flex-wrap">
           {task.status === 'completed' && (
-            <span className="flex items-center gap-1 rounded-md bg-emerald-500 px-2 py-0.5 text-[9px] font-bold text-white uppercase tracking-wider">
+            <span className="flex items-center gap-1 rounded-md bg-emerald-500 px-2 py-0.5 text-[9px] font-bold text-white uppercase tracking-wider shadow-sm">
               <Check className="h-3 w-3" />
-              <span>{task.facesCount} Rostros Difuminados</span>
+              <span>{task.facesCount} Rostros</span>
             </span>
           )}
           {task.status === 'failed' && (
-            <span className="flex items-center gap-1 rounded-md bg-red-500 px-2 py-0.5 text-[9px] font-bold text-white uppercase tracking-wider">
+            <span className="flex items-center gap-1 rounded-md bg-red-500 px-2 py-0.5 text-[9px] font-bold text-white uppercase tracking-wider shadow-sm">
               <AlertTriangle className="h-3 w-3" />
               <span>Error</span>
             </span>
           )}
           {(task.status === 'detecting' || task.status === 'blurring' || isProcessingLocal) && (
-            <span className="flex items-center gap-1 rounded-md bg-indigo-600 px-2 py-0.5 text-[9px] font-bold text-white uppercase tracking-wider animate-pulse">
+            <span className="flex items-center gap-1 rounded-md bg-indigo-600 px-2 py-0.5 text-[9px] font-bold text-white uppercase tracking-wider animate-pulse shadow-sm">
               <Loader2 className="h-3 w-3 animate-spin" />
               <span>{task.status === 'detecting' ? 'Analizando IA...' : 'Difuminando...'}</span>
             </span>
@@ -128,39 +155,49 @@ export default function ImageItem({
       {/* Control Panel / Metadata */}
       <div className="flex flex-col justify-between flex-1 gap-4">
         <div>
-          {/* Metadata */}
+          {/* Metadata Header */}
           <div className="flex items-start justify-between gap-2">
             <div>
-              <h4 className="text-xs font-bold text-gray-800 truncate max-w-[200px] sm:max-w-xs" title={task.name}>
+              <h4 className="text-sm font-bold text-gray-800 truncate max-w-[200px] sm:max-w-xs md:max-w-md" title={task.name}>
                 {task.name}
               </h4>
-              <p className="text-[10px] text-gray-400 mt-0.5 font-medium">{formatSize(task.size)}</p>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="text-[10px] text-gray-400 font-medium">{formatSize(task.size)}</span>
+                {task.facesCount !== undefined && task.status === 'completed' && (
+                  <>
+                    <span className="text-gray-300 text-[10px]">•</span>
+                    <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-1.5 py-0.2 rounded-sm">
+                      Detección exitosa ({task.facesCount} {task.facesCount === 1 ? 'rostro' : 'rostros'})
+                    </span>
+                  </>
+                )}
+              </div>
             </div>
             
             <button
               onClick={() => onRemove(task.id)}
-              className="rounded-lg p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
+              className="rounded-xl p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all cursor-pointer"
               title="Eliminar de la cola"
             >
-              <Trash2 className="h-4 w-4" />
+              <Trash2 className="h-4.5 w-4.5" />
             </button>
           </div>
 
-          {/* Config sliders & controls */}
-          <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-gray-50 pt-4">
+          {/* Config Sliders & Style Presets */}
+          <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-gray-100 pt-4">
             
             {/* Style Picker */}
             <div>
               <label className="text-[10px] font-bold uppercase tracking-wider text-gray-400 flex items-center gap-1">
-                <Sliders className="h-3.5 w-3.5" />
+                <Sliders className="h-3.5 w-3.5 text-gray-400" />
                 Estilo de Difuminado
               </label>
-              <div className="mt-1.5 grid grid-cols-3 gap-1 rounded-lg bg-gray-100 p-0.5 border border-gray-200/50">
+              <div className="mt-1.5 grid grid-cols-3 gap-1 rounded-xl bg-gray-100 p-1 border border-gray-200/50">
                 <button
                   onClick={() => setBlurStyle('gaussian')}
-                  className={`rounded-md py-1 text-[10px] font-bold transition-all cursor-pointer ${
+                  className={`rounded-lg py-1 text-[10px] font-bold transition-all cursor-pointer ${
                     blurStyle === 'gaussian'
-                      ? 'bg-white text-gray-900 shadow-xs'
+                      ? 'bg-white text-gray-900 shadow-xs border border-gray-200/20'
                       : 'text-gray-500 hover:text-gray-900'
                   }`}
                 >
@@ -168,9 +205,9 @@ export default function ImageItem({
                 </button>
                 <button
                   onClick={() => setBlurStyle('pixelated')}
-                  className={`rounded-md py-1 text-[10px] font-bold transition-all cursor-pointer ${
+                  className={`rounded-lg py-1 text-[10px] font-bold transition-all cursor-pointer ${
                     blurStyle === 'pixelated'
-                      ? 'bg-white text-gray-900 shadow-xs'
+                      ? 'bg-white text-gray-900 shadow-xs border border-gray-200/20'
                       : 'text-gray-500 hover:text-gray-900'
                   }`}
                 >
@@ -178,9 +215,9 @@ export default function ImageItem({
                 </button>
                 <button
                   onClick={() => setBlurStyle('censored')}
-                  className={`rounded-md py-1 text-[10px] font-bold transition-all cursor-pointer ${
+                  className={`rounded-lg py-1 text-[10px] font-bold transition-all cursor-pointer ${
                     blurStyle === 'censored'
-                      ? 'bg-white text-gray-900 shadow-xs'
+                      ? 'bg-white text-gray-900 shadow-xs border border-gray-200/20'
                       : 'text-gray-500 hover:text-gray-900'
                   }`}
                 >
@@ -191,10 +228,10 @@ export default function ImageItem({
 
             {/* Intensity Slider */}
             <div>
-              <label className="text-[10px] font-bold uppercase tracking-wider text-gray-400 flex justify-between">
-                <span>Intensidad</span>
-                <span className="text-gray-600 font-semibold">{intensity}px</span>
-              </label>
+              <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400 flex justify-between">
+                <span>Intensidad de Difuminado</span>
+                <span className="text-indigo-600 font-extrabold">{intensity}px</span>
+              </div>
               <input
                 type="range"
                 min="3"
@@ -202,50 +239,252 @@ export default function ImageItem({
                 disabled={blurStyle === 'censored'}
                 value={intensity}
                 onChange={(e) => setIntensity(Number(e.target.value))}
-                className="mt-3.5 w-full h-1.5 bg-gray-150 rounded-lg appearance-none cursor-pointer accent-indigo-600 disabled:opacity-30 disabled:cursor-not-allowed"
+                className="mt-3.5 w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600 disabled:opacity-30 disabled:cursor-not-allowed"
               />
             </div>
 
           </div>
         </div>
 
-        {/* Action button bar */}
-        <div className="flex items-center gap-3 border-t border-gray-50 pt-3.5">
+        {/* Action Button Bar */}
+        <div className="flex flex-wrap items-center gap-2.5 border-t border-gray-100 pt-4">
           {task.status === 'idle' || task.status === 'failed' ? (
             <button
-              onClick={handleStartProcess}
-              className="flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white shadow-md shadow-indigo-100 transition-all hover:bg-indigo-700 active:scale-95 cursor-pointer"
+              onClick={isBlocked ? onOpenBilling : handleStartProcess}
+              disabled={isProcessingLocal}
+              className={`flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-bold text-white shadow-md transition-all cursor-pointer ${
+                isBlocked 
+                  ? 'bg-gray-400 hover:bg-indigo-600 shadow-gray-100 hover:shadow-indigo-150' 
+                  : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-100 active:scale-97'
+              }`}
             >
-              <Sparkles className="h-3.5 w-3.5" />
-              <span>Procesar Automáticamente</span>
+              {isBlocked ? <Lock className="h-3.5 w-3.5" /> : <Sparkles className="h-3.5 w-3.5" />}
+              <span>{isBlocked ? 'Desbloquear con Premium' : 'Procesar Automáticamente con IA'}</span>
             </button>
           ) : task.status === 'completed' ? (
-            <a
-              href={task.processedUrl}
-              download={`autoblur_${task.name}`}
-              className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-md shadow-emerald-100 transition-all hover:bg-emerald-700 active:scale-95 cursor-pointer"
-            >
-              <Download className="h-3.5 w-3.5" />
-              <span>Descargar Imagen</span>
-            </a>
+            <>
+              {/* Compare and Zoom Action */}
+              <button
+                onClick={() => setIsLightboxOpen(true)}
+                className="flex items-center gap-1.5 rounded-xl border border-indigo-150 bg-indigo-50/50 hover:bg-indigo-50 px-4 py-2.5 text-xs font-bold text-indigo-700 transition-all active:scale-97 cursor-pointer"
+              >
+                <Maximize2 className="h-3.5 w-3.5" />
+                <span>Comparar e Inspeccionar</span>
+              </button>
+
+              {/* Download Action */}
+              <a
+                href={task.processedUrl}
+                download={`autoblur_${task.name}`}
+                className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white shadow-md shadow-emerald-100 hover:bg-emerald-700 active:scale-97 transition-all cursor-pointer"
+              >
+                <Download className="h-3.5 w-3.5" />
+                <span>Descargar Imagen</span>
+              </a>
+
+              {/* Force Regenerate Action */}
+              <button
+                onClick={handleForceRegenerate}
+                disabled={isProcessingLocal}
+                title="Vuelve a correr el modelo de IA para detectar rostros desde cero"
+                className="flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 px-3.5 py-2.5 text-xs font-semibold text-gray-700 transition-all active:scale-97 cursor-pointer disabled:opacity-50"
+              >
+                {isProcessingLocal ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin text-gray-500" />
+                ) : (
+                  <RefreshCw className="h-3.5 w-3.5 text-gray-500" />
+                )}
+                <span>Regenerar Rostros con IA</span>
+              </button>
+            </>
           ) : (
             <button
               disabled
-              className="flex items-center gap-1.5 rounded-xl bg-gray-100 px-4 py-2 text-xs font-bold text-gray-400 cursor-not-allowed"
+              className="flex items-center gap-1.5 rounded-xl bg-gray-100 px-4 py-2.5 text-xs font-bold text-gray-400 cursor-not-allowed"
             >
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              <span>Procesando...</span>
+              <span>{task.status === 'detecting' ? 'Corriendo Detección...' : 'Aplicando Filtros...'}</span>
             </button>
           )}
 
           {task.error && (
-            <p className="text-[10px] font-medium text-red-600 bg-red-50 border border-red-100/50 px-2.5 py-1 rounded-md max-w-sm truncate">
+            <p className="text-[10px] font-semibold text-red-600 bg-red-50 border border-red-100/50 px-2.5 py-1.5 rounded-lg max-w-sm truncate">
               {task.error}
             </p>
           )}
         </div>
 
       </div>
+
+      {/* FULL-SCREEN COMPARISON LIGHTBOX (ANTES / DESPUÉS) */}
+      {isLightboxOpen && task.status === 'completed' && (
+        <div className="fixed inset-0 z-50 flex flex-col justify-between bg-gray-950/95 backdrop-blur-xl p-4 sm:p-6 overflow-y-auto animate-fadeIn text-white">
+          
+          {/* Lightbox Header */}
+          <div className="flex items-center justify-between border-b border-white/10 pb-4 w-full max-w-7xl mx-auto">
+            <div>
+              <span className="text-[10px] font-bold text-indigo-400 bg-indigo-500/15 border border-indigo-500/30 px-2.5 py-1 rounded-full uppercase tracking-widest">
+                Modo Inspección e IA
+              </span>
+              <h3 className="text-base sm:text-lg font-bold text-white mt-1.5 truncate max-w-[240px] sm:max-w-xl">
+                {task.name}
+              </h3>
+            </div>
+
+            <button
+              onClick={() => setIsLightboxOpen(false)}
+              className="rounded-full bg-white/10 p-2 text-white hover:bg-white/20 transition-all cursor-pointer"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          {/* Lightbox Comparison Grid */}
+          <div className="my-6 grid grid-cols-1 md:grid-cols-2 gap-6 items-center justify-center w-full max-w-7xl mx-auto flex-1">
+            
+            {/* Column 1: Original Image */}
+            <div className="flex flex-col items-center">
+              <div className="relative rounded-2xl overflow-hidden bg-gray-900 border border-white/10 aspect-[4/3] w-full max-h-[50vh] flex items-center justify-center shadow-2xl">
+                <img
+                  src={task.originalUrl}
+                  alt="Original"
+                  referrerPolicy="no-referrer"
+                  className="max-h-[45vh] max-w-full object-contain"
+                />
+                <span className="absolute top-4 left-4 rounded-lg bg-gray-900/80 backdrop-blur-md border border-white/10 px-2.5 py-1 text-[10px] font-bold text-gray-300 uppercase tracking-widest">
+                  Original (Antes)
+                </span>
+              </div>
+            </div>
+
+            {/* Column 2: Processed AI Image */}
+            <div className="flex flex-col items-center">
+              <div className="relative rounded-2xl overflow-hidden bg-gray-900 border border-indigo-500/30 aspect-[4/3] w-full max-h-[50vh] flex items-center justify-center shadow-2xl">
+                {isProcessingLocal ? (
+                  <div className="absolute inset-0 bg-gray-950/40 backdrop-blur-xs flex flex-col items-center justify-center z-10">
+                    <Loader2 className="h-8 w-8 animate-spin text-indigo-500 mb-2" />
+                    <span className="text-xs text-gray-300 font-bold tracking-wider">Aplicando cambios...</span>
+                  </div>
+                ) : null}
+                <img
+                  src={task.processedUrl}
+                  alt="Blurred Result"
+                  referrerPolicy="no-referrer"
+                  className="max-h-[45vh] max-w-full object-contain"
+                />
+                <span className="absolute top-4 left-4 rounded-lg bg-emerald-500 px-2.5 py-1 text-[10px] font-bold text-white uppercase tracking-widest flex items-center gap-1.5 shadow-md">
+                  <Check className="h-3.5 w-3.5" />
+                  <span>Difuminado Inteligente ({task.facesCount} rostros)</span>
+                </span>
+              </div>
+            </div>
+
+          </div>
+
+          {/* Lightbox Control Bar & Action buttons */}
+          <div className="border-t border-white/10 pt-5 w-full max-w-7xl mx-auto">
+            <div className="flex flex-col lg:flex-row gap-5 items-center justify-between bg-white/5 backdrop-blur-md rounded-2xl p-5 border border-white/5">
+              
+              {/* Left side: interactive adjustments inside lightbox */}
+              <div className="w-full lg:w-1/2 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                
+                {/* Style Picker */}
+                <div>
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-gray-400 flex items-center gap-1">
+                    <Sliders className="h-3.5 w-3.5 text-gray-400" />
+                    Estilo de Difuminado
+                  </label>
+                  <div className="mt-1.5 grid grid-cols-3 gap-1 rounded-xl bg-white/10 p-1 border border-white/5">
+                    <button
+                      onClick={() => setBlurStyle('gaussian')}
+                      className={`rounded-lg py-1 text-[10px] font-bold transition-all cursor-pointer ${
+                        blurStyle === 'gaussian'
+                          ? 'bg-white text-gray-900 shadow-xs'
+                          : 'text-gray-300 hover:text-white'
+                      }`}
+                    >
+                      Gaussian
+                    </button>
+                    <button
+                      onClick={() => setBlurStyle('pixelated')}
+                      className={`rounded-lg py-1 text-[10px] font-bold transition-all cursor-pointer ${
+                        blurStyle === 'pixelated'
+                          ? 'bg-white text-gray-900 shadow-xs'
+                          : 'text-gray-300 hover:text-white'
+                      }`}
+                    >
+                      Mosaico
+                    </button>
+                    <button
+                      onClick={() => setBlurStyle('censored')}
+                      className={`rounded-lg py-1 text-[10px] font-bold transition-all cursor-pointer ${
+                        blurStyle === 'censored'
+                          ? 'bg-white text-gray-900 shadow-xs'
+                          : 'text-gray-300 hover:text-white'
+                      }`}
+                    >
+                      Censurado
+                    </button>
+                  </div>
+                </div>
+
+                {/* Intensity Slider */}
+                <div>
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400 flex justify-between">
+                    <span>Intensidad de Difuminado</span>
+                    <span className="text-indigo-400 font-extrabold">{intensity}px</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="3"
+                    max="45"
+                    disabled={blurStyle === 'censored'}
+                    value={intensity}
+                    onChange={(e) => setIntensity(Number(e.target.value))}
+                    className="mt-3.5 w-full h-1.5 bg-white/15 rounded-lg appearance-none cursor-pointer accent-indigo-500 disabled:opacity-30 disabled:cursor-not-allowed"
+                  />
+                </div>
+
+              </div>
+
+              {/* Right side: Download / Regenerate Actions */}
+              <div className="w-full lg:w-auto flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={handleForceRegenerate}
+                  disabled={isProcessingLocal}
+                  className="flex items-center justify-center gap-1.5 rounded-xl border border-white/20 hover:bg-white/10 bg-transparent px-5 py-3 text-xs font-bold text-white transition-all active:scale-97 cursor-pointer disabled:opacity-50"
+                >
+                  {isProcessingLocal ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <RefreshCw className="h-4 w-4" />
+                  )}
+                  <span>Regenerar con IA (Desde Cero)</span>
+                </button>
+
+                <a
+                  href={task.processedUrl}
+                  download={`autoblur_${task.name}`}
+                  className="flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-6 py-3 text-xs font-bold text-white hover:bg-emerald-500 transition-all active:scale-97 shadow-lg shadow-emerald-950/20 cursor-pointer"
+                >
+                  <Download className="h-4 w-4" />
+                  <span>Descargar Imagen Procesada</span>
+                </a>
+
+                <button
+                  onClick={() => setIsLightboxOpen(false)}
+                  className="flex items-center justify-center gap-1.5 rounded-xl bg-white/10 hover:bg-white/20 px-4 py-3 text-xs font-bold text-gray-300 hover:text-white transition-all cursor-pointer"
+                >
+                  <span>Cerrar</span>
+                </button>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      )}
+
     </div>
   );
 }

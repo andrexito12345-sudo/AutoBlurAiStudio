@@ -1,24 +1,31 @@
 import React, { useState, useRef } from 'react';
-import { Upload, FileWarning, Image as ImageIcon, AlertCircle } from 'lucide-react';
+import { Upload, FileWarning, Image as ImageIcon, AlertCircle, Sparkles } from 'lucide-react';
+import { UserProfile } from '../types';
 
 interface UploadZoneProps {
   onFilesSelected: (files: File[]) => void;
   currentCount: number;
   maxFilesAllowed: number;
+  profile: UserProfile | null;
+  onOpenBilling: () => void;
 }
 
 export default function UploadZone({
   onFilesSelected,
   currentCount,
-  maxFilesAllowed
+  maxFilesAllowed,
+  profile,
+  onOpenBilling
 }: UploadZoneProps) {
   const [isDragActive, setIsDragActive] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [premiumRequiredError, setPremiumRequiredError] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const processFiles = (filesList: FileList | null) => {
     if (!filesList) return;
     setError(null);
+    setPremiumRequiredError(false);
     
     const validFiles: File[] = [];
     const remainingSlots = maxFilesAllowed - currentCount;
@@ -32,10 +39,23 @@ export default function UploadZone({
     let overflowCount = 0;
 
     for (const file of filesToProcess) {
-      // Validate is image
-      if (!file.type.startsWith('image/')) {
+      const fileExt = file.name.split('.').pop()?.toLowerCase() || '';
+      const isAdvancedFormat = ['heic', 'heif', 'tiff', 'tif', 'bmp'].includes(fileExt);
+      const isAllowedExt = ['heic', 'heif', 'tiff', 'tif', 'bmp', 'png', 'jpg', 'jpeg', 'webp'].includes(fileExt);
+      const isImg = file.type.startsWith('image/') || isAllowedExt;
+
+      if (!isImg) {
         setError('Por favor, selecciona únicamente archivos de imagen.');
         continue;
+      }
+
+      if (isAdvancedFormat) {
+        const isUltraPro = profile?.subscriptionPlan === 'ultra_pro';
+        if (!isUltraPro) {
+          setError(`El formato .${fileExt.toUpperCase()} es exclusivo del Plan Ultra Pro ($19.99/mes).`);
+          setPremiumRequiredError(true);
+          continue;
+        }
       }
 
       // Max size 10MB
@@ -102,7 +122,7 @@ export default function UploadZone({
           ref={fileInputRef}
           onChange={handleFileChange}
           multiple
-          accept="image/*"
+          accept="image/*,.heic,.heif,.tiff,.tif,.bmp"
           className="hidden"
         />
 
@@ -116,17 +136,33 @@ export default function UploadZone({
         <p className="mt-1 text-xs text-gray-400">
           O haz clic para explorar tus archivos (Máximo 10 imágenes por lote)
         </p>
-        <div className="mt-4 flex gap-3 text-[10px] font-medium text-gray-500 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100">
-          <span>Formatos: PNG, JPG, JPEG, WEBP</span>
+        <div className="mt-4 flex flex-wrap gap-2 justify-center text-[10px] font-medium text-gray-500 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100">
+          <span>PNG, JPG, JPEG, WEBP</span>
+          <span className="text-purple-300 font-bold">•</span>
+          <span className="text-purple-600 font-bold">PRO: HEIC, HEIF, TIFF, BMP</span>
           <span className="text-gray-300">|</span>
           <span>Tamaño máx: 10MB</span>
         </div>
       </div>
 
       {error && (
-        <div className="mt-3 flex items-center gap-2 rounded-xl bg-red-50 border border-red-100 px-4 py-2.5 text-xs text-red-700 animate-fadeIn">
-          <AlertCircle className="h-4 w-4 shrink-0 text-red-500" />
-          <span>{error}</span>
+        <div className="mt-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 rounded-xl bg-red-50 border border-red-100 px-4 py-3 text-xs text-red-700 animate-fadeIn">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="h-4 w-4 shrink-0 text-red-500" />
+            <span>{error}</span>
+          </div>
+          {premiumRequiredError && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onOpenBilling();
+              }}
+              className="flex items-center gap-1.5 rounded-lg bg-purple-600 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-purple-700 active:scale-95 transition-all shadow-sm shrink-0 cursor-pointer"
+            >
+              <Sparkles className="h-3 w-3 animate-pulse" />
+              <span>Mejorar a Ultra Pro</span>
+            </button>
+          )}
         </div>
       )}
     </div>

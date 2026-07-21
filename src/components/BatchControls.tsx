@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Play, Download, Archive, Loader2, Sparkles } from 'lucide-react';
+import { Play, Download, Archive, Loader2, Sparkles, Lock } from 'lucide-react';
 import { ProcessingTask } from '../types';
 import JSZip from 'jszip';
 
@@ -7,12 +7,16 @@ interface BatchControlsProps {
   tasks: ProcessingTask[];
   onProcessAll: () => Promise<void>;
   isProcessingAny: boolean;
+  isBlocked?: boolean;
+  onOpenBilling?: () => void;
 }
 
 export default function BatchControls({
   tasks,
   onProcessAll,
-  isProcessingAny
+  isProcessingAny,
+  isBlocked,
+  onOpenBilling
 }: BatchControlsProps) {
   const [zipping, setZipping] = useState(false);
 
@@ -84,9 +88,13 @@ export default function BatchControls({
       <div className="flex flex-wrap gap-3">
         {processedFiles < totalFiles && (
           <button
-            onClick={onProcessAll}
+            onClick={isBlocked ? onOpenBilling : onProcessAll}
             disabled={isProcessingAny}
-            className="flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-indigo-100 hover:bg-indigo-700 active:scale-95 disabled:opacity-50 transition-all cursor-pointer"
+            className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-xs font-bold text-white shadow-md transition-all cursor-pointer ${
+              isBlocked 
+                ? 'bg-gray-400 hover:bg-indigo-600 shadow-gray-100 hover:shadow-indigo-150' 
+                : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-100 active:scale-95'
+            }`}
           >
             {isProcessingAny ? (
               <>
@@ -95,8 +103,8 @@ export default function BatchControls({
               </>
             ) : (
               <>
-                <Play className="h-4 w-4 fill-white" />
-                <span>Procesar Todo el Lote</span>
+                {isBlocked ? <Lock className="h-4 w-4" /> : <Play className="h-4 w-4 fill-white" />}
+                <span>{isBlocked ? 'Desbloquear Lote con Premium' : 'Procesar Todo el Lote'}</span>
               </>
             )}
           </button>

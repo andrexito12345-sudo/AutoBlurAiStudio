@@ -24,7 +24,8 @@ export function loadImage(src: string): Promise<HTMLImageElement> {
 export async function applyBlursToImage(
   originalSrc: string,
   faces: { box_2d: number[] }[],
-  config: BlurConfig
+  config: BlurConfig,
+  isPremium?: boolean
 ): Promise<string> {
   const img = await loadImage(originalSrc);
   const canvas = document.createElement('canvas');
@@ -102,6 +103,75 @@ export async function applyBlursToImage(
       ctx.fillRect(x, y, w, h);
     }
 
+    ctx.restore();
+  }
+
+  // If the user is on the free/trial/basic plan, add an elegant "AutoBlur.ai" watermark
+  if (!isPremium) {
+    const badgeHeight = Math.max(28, Math.min(70, Math.round(canvas.height * 0.035)));
+    const fontSize = Math.max(10, Math.round(badgeHeight * 0.38));
+    ctx.save();
+    
+    // Configure text font and measure width
+    ctx.font = `bold ${fontSize}px Inter, system-ui, -apple-system, sans-serif`;
+    const textWidth = ctx.measureText('AutoBlur').width;
+    const suffixWidth = ctx.measureText('.ai').width;
+    const totalTextWidth = textWidth + suffixWidth;
+    
+    const logoSize = badgeHeight * 0.55;
+    // Badge width with padding: logo + text + gap + left/right borders
+    const badgeWidth = logoSize + totalTextWidth + (badgeHeight * 0.8);
+    const padding = Math.max(12, Math.min(40, Math.round(canvas.height * 0.025)));
+    
+    const bx = canvas.width - badgeWidth - padding;
+    const by = canvas.height - badgeHeight - padding;
+    const r = badgeHeight / 2;
+    
+    // Draw rounded background capsule
+    ctx.beginPath();
+    ctx.moveTo(bx + r, by);
+    ctx.lineTo(bx + badgeWidth - r, by);
+    ctx.quadraticCurveTo(bx + badgeWidth, by, bx + badgeWidth, by + r);
+    ctx.quadraticCurveTo(bx + badgeWidth, by + badgeHeight, bx + badgeWidth - r, by + badgeHeight);
+    ctx.lineTo(bx + r, by + badgeHeight);
+    ctx.quadraticCurveTo(bx, by + badgeHeight, bx, by + r);
+    ctx.quadraticCurveTo(bx, by, bx + r, by);
+    ctx.closePath();
+    
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.75)'; // Slate 900 translucent
+    ctx.fill();
+    
+    // Draw Shield Logo matching favicon SVG
+    const logoX = bx + badgeHeight * 0.35;
+    const logoY = by + (badgeHeight - logoSize) / 2;
+    const scaleFactor = logoSize / 24;
+    
+    ctx.save();
+    ctx.translate(logoX, logoY);
+    ctx.scale(scaleFactor, scaleFactor);
+    ctx.lineWidth = 2.2;
+    ctx.strokeStyle = '#818cf8'; // indigo-400
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    
+    const path = new Path2D("M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z");
+    const circle = new Path2D();
+    circle.arc(12, 11, 3, 0, 2 * Math.PI);
+    
+    ctx.stroke(path);
+    ctx.stroke(circle);
+    ctx.restore();
+    
+    // Draw text: "AutoBlur" in white and ".ai" in indigo-400
+    const textX = logoX + logoSize + badgeHeight * 0.22;
+    const textY = by + badgeHeight * 0.58 + fontSize * 0.12;
+    
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText('AutoBlur', textX, textY);
+    
+    ctx.fillStyle = '#818cf8'; // indigo-400
+    ctx.fillText('.ai', textX + textWidth, textY);
+    
     ctx.restore();
   }
 
