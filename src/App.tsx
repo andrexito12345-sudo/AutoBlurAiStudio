@@ -1147,6 +1147,122 @@ export default function App() {
               </div>
             </div>
 
+            {/* =========================================================================
+                HOW IT WORKS — 3 steps
+               ========================================================================= */}
+            <div className="mt-16 sm:mt-24 border-t border-gray-150 pt-10 sm:pt-16">
+              <div className="max-w-2xl mx-auto text-center space-y-3 mb-10 sm:mb-14">
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-indigo-600">Cómo funciona</p>
+                <h3 className="font-display text-2xl sm:text-3xl font-extrabold text-gray-900 leading-tight">
+                  Tres pasos. Segundos. Cero esfuerzo.
+                </h3>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
+                {[
+                  { n: '01', icon: Upload, title: 'Sube tus fotos', desc: 'Arrastra una o varias imágenes. PNG, JPG, WEBP y formatos PRO como HEIC o TIFF.' },
+                  { n: '02', icon: Sparkles, title: 'La IA detecta los rostros', desc: 'Nuestro motor localiza cada cara automáticamente en segundos, con 99.8% de precisión.' },
+                  { n: '03', icon: ShieldCheck, title: 'Descarga protegido', desc: 'Elige el estilo de censura y descarga. Tus fotos se procesan localmente y nunca se guardan.' },
+                ].map((step) => (
+                  <div key={step.n} className="relative bg-white border border-gray-150/60 rounded-3xl p-6 sm:p-7 shadow-xs hover:shadow-md transition-all text-left overflow-hidden">
+                    <span className="absolute top-4 right-5 font-display text-5xl font-extrabold text-gray-100 select-none">{step.n}</span>
+                    <div className="relative h-11 w-11 rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-600 text-white flex items-center justify-center mb-5 shadow-lg shadow-indigo-200/50">
+                      <step.icon className="h-5 w-5" />
+                    </div>
+                    <h4 className="relative font-display text-sm sm:text-base font-extrabold text-gray-900">{step.title}</h4>
+                    <p className="relative text-xs text-gray-500 mt-2 leading-relaxed">{step.desc}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* =========================================================================
+                PRICING — 3 passes
+               ========================================================================= */}
+            <div className="mt-16 sm:mt-24 border-t border-gray-150 pt-10 sm:pt-16">
+              <div className="max-w-2xl mx-auto text-center space-y-3 mb-10 sm:mb-14">
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-indigo-600">Precios simples</p>
+                <h3 className="font-display text-2xl sm:text-3xl font-extrabold text-gray-900 leading-tight">
+                  Paga solo por lo que necesitas
+                </h3>
+                <p className="text-xs sm:text-sm text-gray-500 leading-relaxed">
+                  Pases de un solo pago, sin suscripciones. Empieza gratis con 10 imágenes.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+                {[
+                  { name: 'Diario', price: '$1.99', unit: '/ 24 horas', imgs: '50 imágenes', accent: 'sky', featured: false },
+                  { name: 'Mensual', price: '$12.99', unit: '/ 30 días', imgs: '2000 imágenes', accent: 'indigo', featured: true },
+                  { name: 'Semanal', price: '$4.99', unit: '/ 7 días', imgs: '500 imágenes', accent: 'emerald', featured: false },
+                ].map((p) => (
+                  <div
+                    key={p.name}
+                    className={`relative rounded-3xl p-6 sm:p-7 flex flex-col transition-all ${
+                      p.featured
+                        ? 'bg-gray-900 text-white shadow-2xl shadow-gray-900/20 md:-translate-y-3 md:order-2'
+                        : 'bg-white border border-gray-150/70 shadow-xs hover:shadow-md md:order-1 last:md:order-3'
+                    }`}
+                  >
+                    {p.featured && (
+                      <span className="absolute top-0 right-6 -translate-y-1/2 rounded-full bg-gradient-to-r from-indigo-500 to-violet-500 px-3 py-0.5 text-[10px] font-extrabold text-white uppercase tracking-wider">
+                        Mejor valor
+                      </span>
+                    )}
+                    <h4 className={`text-xs font-extrabold uppercase tracking-wider ${p.featured ? 'text-indigo-300' : 'text-indigo-600'}`}>Plan {p.name}</h4>
+                    <div className="mt-3 flex items-baseline gap-1">
+                      <span className="font-display text-4xl font-extrabold tracking-tight">{p.price}</span>
+                      <span className={`text-xs font-semibold ${p.featured ? 'text-gray-400' : 'text-gray-500'}`}>{p.unit}</span>
+                    </div>
+                    <div className={`mt-5 flex items-center gap-2 text-sm font-semibold ${p.featured ? 'text-white' : 'text-gray-800'}`}>
+                      <CheckCircle className={`h-4 w-4 ${p.featured ? 'text-indigo-300' : 'text-emerald-500'}`} />
+                      {p.imgs}
+                    </div>
+                    <ul className={`mt-3 space-y-2 text-xs ${p.featured ? 'text-gray-300' : 'text-gray-500'}`}>
+                      <li className="flex items-center gap-2"><CheckCircle className={`h-3.5 w-3.5 ${p.featured ? 'text-indigo-300' : 'text-emerald-500'}`} />Sin marcas de agua</li>
+                      <li className="flex items-center gap-2"><CheckCircle className={`h-3.5 w-3.5 ${p.featured ? 'text-indigo-300' : 'text-emerald-500'}`} />Formatos PRO (HEIC, TIFF…)</li>
+                      <li className="flex items-center gap-2"><CheckCircle className={`h-3.5 w-3.5 ${p.featured ? 'text-indigo-300' : 'text-emerald-500'}`} />Procesamiento local seguro</li>
+                    </ul>
+                    <button
+                      onClick={handleSignIn}
+                      className={`mt-6 w-full rounded-2xl py-3 text-sm font-bold transition-all active:scale-98 cursor-pointer ${
+                        p.featured
+                          ? 'bg-white text-gray-900 hover:bg-gray-100'
+                          : 'bg-gray-900 text-white hover:bg-gray-800'
+                      }`}
+                    >
+                      Comenzar
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* =========================================================================
+                FINAL CTA
+               ========================================================================= */}
+            <div className="mt-16 sm:mt-24">
+              <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-indigo-600 via-violet-600 to-indigo-700 px-6 py-12 sm:px-12 sm:py-16 text-center shadow-2xl shadow-indigo-300/40">
+                <div className="absolute -top-20 -right-16 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
+                <div className="absolute -bottom-24 -left-16 h-64 w-64 rounded-full bg-fuchsia-400/20 blur-3xl" />
+                <div className="relative">
+                  <h3 className="font-display text-2xl sm:text-4xl font-extrabold text-white tracking-tight max-w-2xl mx-auto leading-tight">
+                    Protege la privacidad de tus fotos hoy mismo
+                  </h3>
+                  <p className="mt-3 text-sm sm:text-base text-indigo-100 max-w-lg mx-auto">
+                    Empieza gratis en segundos. Sin tarjeta, sin instalaciones.
+                  </p>
+                  <button
+                    onClick={handleSignIn}
+                    className="mt-8 inline-flex items-center justify-center gap-2.5 rounded-2xl bg-white px-8 py-4 text-sm font-bold text-gray-900 shadow-xl transition-all hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
+                  >
+                    <LogIn className="h-5 w-5" />
+                    <span>Comenzar gratis con Google</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
           </div>
         )}
       </main>
