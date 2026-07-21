@@ -1,4 +1,14 @@
-export type SubscriptionPlan = 'free' | 'trial' | 'basic' | 'premium' | 'ultra_pro' | 'lifetime';
+export type SubscriptionPlan =
+  | 'free'
+  | 'trial'
+  | 'daily'
+  | 'weekly'
+  | 'monthly'
+  // Legacy plans kept for backward compatibility with existing user documents.
+  | 'basic'
+  | 'premium'
+  | 'ultra_pro'
+  | 'lifetime';
 
 export interface UserProfile {
   uid: string;
@@ -11,6 +21,7 @@ export interface UserProfile {
   stripeCustomerId?: string;
   stripeSubscriptionId?: string;
   subscriptionExpiresAt?: string; // ISO String
+  imageLimit?: number; // Max images allowed for the active paid pass (set on purchase)
   imagesProcessedCount: number;
 }
 

@@ -26,7 +26,7 @@ export default function BillingModal({
   onClose,
   profile
 }: BillingModalProps) {
-  const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'annual' | 'lifetime'>('monthly');
+  const [selectedPlan, setSelectedPlan] = useState<'daily' | 'weekly' | 'monthly'>('monthly');
   const [preparing, setPreparing] = useState(false);
   const [prepareError, setPrepareError] = useState<string | null>(null);
 
@@ -140,103 +140,100 @@ export default function BillingModal({
         {/* Pricing Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-4xl mx-auto mb-8">
           
-          {/* 1. PLAN MENSUAL */}
+          {/* 1. PLAN DIARIO */}
+          <button
+            onClick={() => setSelectedPlan('daily')}
+            className={`text-left relative rounded-2xl border p-5 transition-all cursor-pointer flex flex-col justify-between ${
+              selectedPlan === 'daily'
+                ? 'border-sky-600 bg-sky-50/20 ring-2 ring-sky-600/10'
+                : 'border-gray-200 bg-white hover:border-gray-300'
+            }`}
+          >
+            <div>
+              <div className="flex justify-between items-start">
+                <span className="text-xs font-extrabold text-sky-600 uppercase tracking-wider">Plan Diario</span>
+                {selectedPlan === 'daily' && <span className="h-2 w-2 rounded-full bg-sky-600"></span>}
+              </div>
+              <p className="text-xs text-gray-500 mt-1">Acceso por 24 horas. Ideal para un trabajo puntual.</p>
+              <div className="mt-3 flex items-baseline text-gray-900">
+                <span className="text-3xl font-extrabold tracking-tight">$1.99</span>
+                <span className="ml-1 text-[11px] font-semibold text-gray-500">/ 24 horas</span>
+              </div>
+              <ul className="mt-4 space-y-2 text-[11px] text-gray-600">
+                <li className="flex items-center gap-1.5">
+                  <Check className="h-3.5 w-3.5 text-emerald-500" />
+                  <span>Hasta 50 imágenes</span>
+                </li>
+                <li className="flex items-center gap-1.5">
+                  <Check className="h-3.5 w-3.5 text-emerald-500" />
+                  <span>Sin marcas de agua</span>
+                </li>
+              </ul>
+            </div>
+          </button>
+
+          {/* 2. PLAN SEMANAL */}
+          <button
+            onClick={() => setSelectedPlan('weekly')}
+            className={`text-left relative rounded-2xl border p-5 transition-all cursor-pointer flex flex-col justify-between ${
+              selectedPlan === 'weekly'
+                ? 'border-emerald-600 bg-emerald-50/20 ring-2 ring-emerald-600/10'
+                : 'border-gray-200 bg-white hover:border-gray-300'
+            }`}
+          >
+            <div>
+              <div className="flex justify-between items-start">
+                <span className="text-xs font-extrabold text-emerald-600 uppercase tracking-wider">Plan Semanal</span>
+                {selectedPlan === 'weekly' && <span className="h-2 w-2 rounded-full bg-emerald-600"></span>}
+              </div>
+              <p className="text-xs text-gray-500 mt-1">Acceso por 7 días. Para proyectos de varios días.</p>
+              <div className="mt-3 flex items-baseline text-gray-900">
+                <span className="text-3xl font-extrabold tracking-tight">$4.99</span>
+                <span className="ml-1 text-[11px] font-semibold text-gray-500">/ 7 días</span>
+              </div>
+              <ul className="mt-4 space-y-2 text-[11px] text-gray-600">
+                <li className="flex items-center gap-1.5">
+                  <Check className="h-3.5 w-3.5 text-emerald-500" />
+                  <span>Hasta 500 imágenes</span>
+                </li>
+                <li className="flex items-center gap-1.5">
+                  <Check className="h-3.5 w-3.5 text-emerald-500" />
+                  <span>Sin marcas de agua</span>
+                </li>
+              </ul>
+            </div>
+          </button>
+
+          {/* 3. PLAN MENSUAL (MEJOR VALOR) */}
           <button
             onClick={() => setSelectedPlan('monthly')}
             className={`text-left relative rounded-2xl border p-5 transition-all cursor-pointer flex flex-col justify-between ${
               selectedPlan === 'monthly'
                 ? 'border-indigo-600 bg-indigo-50/20 ring-2 ring-indigo-600/10'
-                : 'border-gray-200 bg-white hover:border-gray-300'
+                : 'border-indigo-300 bg-white hover:border-indigo-400'
             }`}
           >
+            <div className="absolute top-0 right-4 -translate-y-1/2 rounded-full bg-indigo-600 px-2 py-0.5 text-[9px] font-extrabold text-white uppercase tracking-widest">
+              Mejor Valor
+            </div>
             <div>
               <div className="flex justify-between items-start">
                 <span className="text-xs font-extrabold text-indigo-600 uppercase tracking-wider">Plan Mensual</span>
                 {selectedPlan === 'monthly' && <span className="h-2 w-2 rounded-full bg-indigo-600"></span>}
               </div>
-              <p className="text-xs text-gray-500 mt-1">Suscripción por 30 días de uso ilimitado.</p>
+              <p className="text-xs text-gray-500 mt-1">Acceso por 30 días al menor precio por imagen.</p>
               <div className="mt-3 flex items-baseline text-gray-900">
-                <span className="text-3xl font-extrabold tracking-tight">$9.99</span>
+                <span className="text-3xl font-extrabold tracking-tight">$12.99</span>
                 <span className="ml-1 text-[11px] font-semibold text-gray-500">/ 30 días</span>
               </div>
               <ul className="mt-4 space-y-2 text-[11px] text-gray-600">
                 <li className="flex items-center gap-1.5">
                   <Check className="h-3.5 w-3.5 text-emerald-500" />
-                  <span>Sin marcas de agua</span>
+                  <span>Hasta 2000 imágenes</span>
                 </li>
                 <li className="flex items-center gap-1.5">
                   <Check className="h-3.5 w-3.5 text-emerald-500" />
-                  <span>Imágenes ilimitadas</span>
-                </li>
-              </ul>
-            </div>
-          </button>
-
-          {/* 2. PLAN ANUAL (RECOMENDADO) */}
-          <button
-            onClick={() => setSelectedPlan('annual')}
-            className={`text-left relative rounded-2xl border p-5 transition-all cursor-pointer flex flex-col justify-between ${
-              selectedPlan === 'annual'
-                ? 'border-emerald-600 bg-emerald-50/20 ring-2 ring-emerald-600/10'
-                : 'border-gray-200 bg-white hover:border-gray-300'
-            }`}
-          >
-            <div className="absolute top-0 right-4 -translate-y-1/2 rounded-full bg-emerald-600 px-2 py-0.5 text-[9px] font-extrabold text-white uppercase tracking-widest">
-              Ahorra 18%
-            </div>
-            <div>
-              <div className="flex justify-between items-start">
-                <span className="text-xs font-extrabold text-emerald-600 uppercase tracking-wider">Plan Anual</span>
-                {selectedPlan === 'annual' && <span className="h-2 w-2 rounded-full bg-emerald-600"></span>}
-              </div>
-              <p className="text-xs text-gray-500 mt-1">Suscripción por 365 días al mejor precio.</p>
-              <div className="mt-3 flex items-baseline text-gray-900">
-                <span className="text-3xl font-extrabold tracking-tight">$99.00</span>
-                <span className="ml-1 text-[11px] font-semibold text-gray-500">/ 365 días</span>
-              </div>
-              <ul className="mt-4 space-y-2 text-[11px] text-gray-600">
-                <li className="flex items-center gap-1.5">
-                  <Check className="h-3.5 w-3.5 text-emerald-500" />
-                  <span>Soporte prioritario</span>
-                </li>
-                <li className="flex items-center gap-1.5">
-                  <Check className="h-3.5 w-3.5 text-emerald-500" />
-                  <span>Acceso por todo un año</span>
-                </li>
-              </ul>
-            </div>
-          </button>
-
-          {/* 3. PLAN DE POR VIDA */}
-          <button
-            onClick={() => setSelectedPlan('lifetime')}
-            className={`text-left relative rounded-2xl border p-5 transition-all cursor-pointer flex flex-col justify-between ${
-              selectedPlan === 'lifetime'
-                ? 'border-purple-600 bg-purple-50/20 ring-2 ring-purple-600/10'
-                : 'border-gray-200 bg-white hover:border-gray-300'
-            }`}
-          >
-            <div className="absolute top-0 right-4 -translate-y-1/2 rounded-full bg-purple-600 px-2 py-0.5 text-[9px] font-extrabold text-white uppercase tracking-widest">
-              Único Pago
-            </div>
-            <div>
-              <div className="flex justify-between items-start">
-                <span className="text-xs font-extrabold text-purple-600 uppercase tracking-wider">De Por Vida</span>
-                {selectedPlan === 'lifetime' && <span className="h-2 w-2 rounded-full bg-purple-600"></span>}
-              </div>
-              <p className="text-xs text-gray-500 mt-1">Acceso permanente. Olvídate de renovar.</p>
-              <div className="mt-3 flex items-baseline text-gray-900">
-                <span className="text-3xl font-extrabold tracking-tight">$39.99</span>
-                <span className="ml-1 text-[11px] font-semibold text-gray-500">/ único pago</span>
-              </div>
-              <ul className="mt-4 space-y-2 text-[11px] text-gray-600">
-                <li className="flex items-center gap-1.5">
-                  <Check className="h-3.5 w-3.5 text-emerald-500" />
-                  <span>Acceso permanente</span>
-                </li>
-                <li className="flex items-center gap-1.5">
-                  <Check className="h-3.5 w-3.5 text-emerald-500" />
-                  <span>Actualizaciones eternas</span>
+                  <span>Sin marcas de agua + prioridad</span>
                 </li>
               </ul>
             </div>
@@ -250,7 +247,7 @@ export default function BillingModal({
             <div>
               <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Plan Seleccionado</h4>
               <p className="text-sm font-extrabold text-gray-800 mt-0.5">
-                {selectedPlan === 'monthly' ? 'Suscripción Premium Mensual ($9.99)' : selectedPlan === 'annual' ? 'Suscripción Premium Anual ($99.00)' : 'Acceso De Por Vida ($39.99)'}
+                {selectedPlan === 'daily' ? 'Pase Diario ($1.99)' : selectedPlan === 'weekly' ? 'Pase Semanal ($4.99)' : 'Pase Mensual ($12.99)'}
               </p>
             </div>
             <div className="mt-2 sm:mt-0">

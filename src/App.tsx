@@ -35,6 +35,31 @@ import ImageItem from './components/ImageItem';
 import BatchControls from './components/BatchControls';
 import { applyBlursToImage, BlurConfig } from './utils/imageHelper';
 
+// Plans that grant a paid image allowance. `daily`/`weekly`/`monthly` are the
+// current passes; the legacy names are kept so existing user documents still work.
+const PAID_PLANS = ['daily', 'weekly', 'monthly', 'premium', 'ultra_pro', 'lifetime'];
+const PLAN_IMAGE_LIMITS: Record<string, number> = { daily: 50, weekly: 500, monthly: 2000 };
+const FREE_IMAGE_LIMIT = 10;
+
+// Single source of truth for a user's current access: whether a paid pass is
+// active, how many images it allows, and whether they're blocked from processing.
+function getPlanAccess(profile: UserProfile | null, now: Date) {
+  const plan = profile?.subscriptionPlan || 'free';
+  const notExpired =
+    profile?.subscriptionExpiresAt === 'never' ||
+    (!!profile?.subscriptionExpiresAt && new Date(profile.subscriptionExpiresAt) > now);
+  const isPaidActive = PAID_PLANS.includes(plan) && notExpired;
+  const imageLimit = isPaidActive
+    ? (profile?.imageLimit ?? PLAN_IMAGE_LIMITS[plan] ?? 2000)
+    : FREE_IMAGE_LIMIT;
+  const count = profile?.imagesProcessedCount || 0;
+  const isTrialExpired =
+    !isPaidActive && !!profile?.trialExpiresAt && now > new Date(profile.trialExpiresAt);
+  const isLimitReached = count >= imageLimit;
+  const isBlocked = isLimitReached || isTrialExpired;
+  return { plan, isPaidActive, imageLimit, count, isTrialExpired, isLimitReached, isBlocked };
+}
+
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -89,7 +114,8 @@ export default function App() {
 
           const result = await response.json();
           if (response.ok && result.success) {
-            setPaymentSuccessMessage(`¡Gracias por tu pago! Tu plan ${result.plan === 'lifetime' ? 'De Por Vida' : 'Premium'} ha sido activado correctamente.`);
+            const planLabels: Record<string, string> = { daily: 'Diario', weekly: 'Semanal', monthly: 'Mensual' };
+            setPaymentSuccessMessage(`¡Gracias por tu pago! Tu Plan ${planLabels[result.plan] || 'Pro'} ha sido activado correctamente.`);
             // Clean URL query parameters
             const cleanUrl = window.location.pathname;
             window.history.replaceState({}, document.title, cleanUrl);
@@ -259,16 +285,15 @@ export default function App() {
 
     if (forceRedetect || !hasCachedFaces) {
       // Validate plan limit or trial expiration on the client side
-      const plan = profile?.subscriptionPlan || 'free';
-      const isUserPremium = plan === 'premium' || plan === 'ultra_pro' || plan === 'lifetime';
-      const isUserTrialExpired = profile?.trialExpiresAt ? new Date() > new Date(profile.trialExpiresAt) : false;
-      const processedCount = profile?.imagesProcessedCount || 0;
-      
-      if (!isUserPremium && (processedCount >= 10 || isUserTrialExpired)) {
+      const access = getPlanAccess(profile, new Date());
+
+      if (access.isBlocked) {
         setIsBillingOpen(true);
-        const errorMsg = isUserTrialExpired 
-          ? 'Tu prueba gratuita de 24 horas ha expirado. Por favor, actualiza tu plan para continuar procesando imágenes.'
-          : 'Has alcanzado el límite de 10 imágenes permitidas en el Plan de Prueba. Por favor, actualiza tu plan para continuar procesando de forma ilimitada.';
+        const errorMsg = access.isTrialExpired
+          ? 'Tu prueba gratuita de 24 horas ha expirado. Actualiza tu plan para continuar procesando imágenes.'
+          : access.isPaidActive
+            ? `Has alcanzado el límite de ${access.imageLimit} imágenes de tu plan. Renueva o sube de plan para seguir procesando.`
+            : `Has alcanzado el límite de ${access.imageLimit} imágenes gratis. Elige un plan para continuar.`;
         setTasks(prev => prev.map(t => t.id === id ? {
           ...t,
           status: 'failed',
@@ -334,9 +359,8 @@ export default function App() {
     setTasks(prev => prev.map(t => t.id === id ? { ...t, status: 'blurring' } : t));
 
     try {
-      const plan = profile?.subscriptionPlan || 'free';
-      const isUserPremium = plan === 'premium' || plan === 'ultra_pro' || plan === 'lifetime';
-      
+      const isUserPremium = getPlanAccess(profile, new Date()).isPaidActive;
+
       // Draw blurs client side using canvas
       const blurredUrl = await applyBlursToImage(task.originalUrl!, faces, blurConfig, isUserPremium);
 
@@ -423,16 +447,13 @@ export default function App() {
     );
   }
 
-  const isPremium = !!(
-    profile &&
-    (profile.subscriptionPlan === 'premium' || profile.subscriptionPlan === 'lifetime') &&
-    (profile.subscriptionExpiresAt === 'never' || (profile.subscriptionExpiresAt && new Date(profile.subscriptionExpiresAt) > currentTime))
-  );
+  const access = getPlanAccess(profile, currentTime);
+  const isPremium = access.isPaidActive;
+  const imageLimit = access.imageLimit;
+  const isTrialExpired = access.isTrialExpired;
+  const isBlocked = access.isBlocked;
 
   const trialExpiresAt = profile?.trialExpiresAt ? new Date(profile.trialExpiresAt) : null;
-  const isTrialExpired = trialExpiresAt ? currentTime > trialExpiresAt : false;
-  const isLimitReached = (profile?.imagesProcessedCount || 0) >= 10;
-  const isBlocked = !isPremium && (isTrialExpired || isLimitReached);
 
   const getTrialTimeRemainingText = () => {
     if (!trialExpiresAt) return '';
@@ -449,6 +470,12 @@ export default function App() {
 
   const getPlanDisplayName = (plan?: string) => {
     switch (plan) {
+      case 'daily':
+        return 'Plan Diario';
+      case 'weekly':
+        return 'Plan Semanal';
+      case 'monthly':
+        return 'Plan Mensual';
       case 'ultra_pro':
         return 'Plan Ultra Pro';
       case 'premium':
@@ -525,34 +552,46 @@ export default function App() {
           /* WORKSPACE VIEW (LOGGED IN) */
           <div className="space-y-8 animate-fadeIn">
             
-            {/* Header Title */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div>
-                <h2 className="font-display text-2xl font-bold text-gray-900 tracking-tight">
-                  Espacio de Trabajo
-                </h2>
-                <p className="text-xs text-gray-500 mt-1">
-                  Sube tus fotos, aplica diferentes estilos de censura y descarga los resultados de forma rápida.
-                </p>
-              </div>
-
-              {/* Status metrics display */}
-              <div className="flex gap-4">
-                <div className="rounded-xl border border-gray-100 bg-white p-3 shadow-xs min-w-[140px]">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Tu Plan</p>
-                  <p className="text-sm font-extrabold text-indigo-600 capitalize mt-1 flex items-center gap-1.5">
-                    {getPlanDisplayName(profile.subscriptionPlan)}
-                    {isPremium && (
-                      <Zap className="h-3.5 w-3.5 text-amber-500 fill-amber-400 shrink-0" />
-                    )}
+            {/* Hero Header */}
+            <div className="relative overflow-hidden rounded-3xl border border-indigo-100 bg-gradient-to-br from-indigo-600 via-indigo-600 to-violet-600 px-6 py-8 sm:px-10 sm:py-10 shadow-lg shadow-indigo-200/40">
+              <div className="absolute -top-16 -right-16 h-56 w-56 rounded-full bg-white/10 blur-2xl" />
+              <div className="absolute -bottom-20 -left-10 h-56 w-56 rounded-full bg-violet-400/20 blur-2xl" />
+              <div className="relative flex flex-col lg:flex-row lg:items-end justify-between gap-8">
+                <div className="max-w-xl">
+                  <div className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-[11px] font-bold text-white/90 backdrop-blur-sm mb-4">
+                    <Sparkles className="h-3.5 w-3.5" />
+                    <span>Difuminado inteligente de rostros con IA</span>
+                  </div>
+                  <h2 className="font-display text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+                    Tu Espacio de Trabajo
+                  </h2>
+                  <p className="text-sm text-indigo-100 mt-2 leading-relaxed">
+                    Sube tus fotos, aplica distintos estilos de censura y descarga los resultados en segundos.
                   </p>
                 </div>
-                <div className="rounded-xl border border-gray-100 bg-white p-3 shadow-xs min-w-[140px]">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Imágenes Procesadas</p>
-                  <p className="text-sm font-extrabold text-gray-900 mt-1">
-                    {profile.imagesProcessedCount}
-                    {!isPremium && <span className="text-gray-400 text-xs font-medium"> / 10 máx</span>}
-                  </p>
+
+                {/* Plan + usage cards */}
+                <div className="flex flex-col sm:flex-row gap-3 shrink-0">
+                  <div className="rounded-2xl bg-white/10 backdrop-blur-sm border border-white/15 px-4 py-3 min-w-[150px]">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-indigo-100">Tu Plan</p>
+                    <p className="text-base font-extrabold text-white mt-1 flex items-center gap-1.5">
+                      {getPlanDisplayName(profile.subscriptionPlan)}
+                      {isPremium && <Zap className="h-4 w-4 text-amber-300 fill-amber-300 shrink-0" />}
+                    </p>
+                  </div>
+                  <div className="rounded-2xl bg-white/10 backdrop-blur-sm border border-white/15 px-4 py-3 min-w-[170px]">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-indigo-100">Imágenes</p>
+                    <p className="text-base font-extrabold text-white mt-1">
+                      {profile.imagesProcessedCount}
+                      <span className="text-indigo-200 text-xs font-medium"> / {imageLimit}</span>
+                    </p>
+                    <div className="mt-2 h-1.5 w-full rounded-full bg-white/20 overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-white transition-all duration-500"
+                        style={{ width: `${Math.min(100, ((profile.imagesProcessedCount || 0) / imageLimit) * 100)}%` }}
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -578,8 +617,8 @@ export default function App() {
                       {isBlocked 
                         ? (isTrialExpired 
                             ? 'Han transcurrido las 24 horas de prueba. Suscríbete ahora para reactivar el procesamiento inteligente.' 
-                            : 'Has alcanzado el límite de 10 imágenes procesadas gratis. Suscríbete ahora para desbloquear uso ilimitado.')
-                        : `Tienes un límite de 10 fotos y 24 horas de uso gratis. Tiempo de prueba restante: ${getTrialTimeRemainingText() || 'Calculando...'}.`}
+                            : `Has alcanzado el límite de ${imageLimit} imágenes gratis. Elige un plan para seguir procesando.`)
+                        : `Tienes ${imageLimit} imágenes y 24 horas de uso gratis. Tiempo de prueba restante: ${getTrialTimeRemainingText() || 'Calculando...'}.`}
                     </p>
                   </div>
                 </div>
@@ -598,11 +637,11 @@ export default function App() {
             )}
 
             {/* Dropzone Upload */}
-            <div className="max-w-3xl mx-auto">
+            <div className="max-w-5xl mx-auto">
               <UploadZone
                 onFilesSelected={handleFilesSelected}
                 currentCount={tasks.length}
-                maxFilesAllowed={10}
+                maxFilesAllowed={isPremium ? 50 : 10}
                 profile={profile}
                 onOpenBilling={() => setIsBillingOpen(true)}
               />

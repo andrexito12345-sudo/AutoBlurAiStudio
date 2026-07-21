@@ -264,7 +264,7 @@ async function startServer() {
         return res.status(401).json({ error: 'Acceso no autorizado: No se pudo identificar al usuario.' });
       }
 
-      if (!['monthly', 'annual', 'lifetime'].includes(planType)) {
+      if (!['daily', 'weekly', 'monthly'].includes(planType)) {
         return res.status(400).json({ error: 'Tipo de plan inválido.' });
       }
 
@@ -277,12 +277,12 @@ async function startServer() {
         });
       }
 
-      // Calculate amount strictly on the server-side
-      let amount = 999; // Default monthly: $9.99 (999 cents)
-      if (planType === 'annual') {
-        amount = 9900; // Annual: $99.00 (9900 cents)
-      } else if (planType === 'lifetime') {
-        amount = 3999; // Lifetime: $39.99 (3999 cents)
+      // Calculate amount strictly on the server-side (cents).
+      let amount = 1299; // Default monthly: $12.99 (1299 cents)
+      if (planType === 'daily') {
+        amount = 199; // Daily pass: $1.99 (199 cents)
+      } else if (planType === 'weekly') {
+        amount = 499; // Weekly pass: $4.99 (499 cents)
       }
 
       // Generate secure unique transaction ID
@@ -307,7 +307,7 @@ async function startServer() {
         amountWithTax: 0,
         currency: "USD",
         clientTransactionId: clientTransactionId,
-        reference: `Plan ${planType === 'lifetime' ? 'De Por Vida' : planType === 'annual' ? 'Anual' : 'Mensual'}`
+        reference: `Plan ${planType === 'daily' ? 'Diario' : planType === 'weekly' ? 'Semanal' : 'Mensual'}`
       });
 
     } catch (error: any) {
@@ -385,24 +385,28 @@ async function startServer() {
         return res.status(400).json({ error: `La transacción no fue aprobada: ${confirmData.transactionStatus || 'Declined'}` });
       }
 
-      // Upgrade user in Firebase Firestore
-      let expiresAt = 'never';
-      if (txData.planType === 'monthly') {
-        const expires = new Date();
-        expires.setDate(expires.getDate() + 30);
-        expiresAt = expires.toISOString();
-      } else if (txData.planType === 'annual') {
-        const expires = new Date();
-        expires.setDate(expires.getDate() + 365);
-        expiresAt = expires.toISOString();
-      }
+      // Upgrade user in Firebase Firestore.
+      // Each plan is a one-time pass: it grants an image allowance until it expires.
+      const PLAN_CONFIG: Record<string, { days: number; imageLimit: number }> = {
+        daily: { days: 1, imageLimit: 50 },
+        weekly: { days: 7, imageLimit: 500 },
+        monthly: { days: 30, imageLimit: 2000 }
+      };
+      const config = PLAN_CONFIG[txData.planType] || PLAN_CONFIG.monthly;
 
-      const planName = txData.planType === 'lifetime' ? 'lifetime' : 'premium';
+      const expires = new Date();
+      expires.setDate(expires.getDate() + config.days);
+      const expiresAt = expires.toISOString();
 
-      // Update user subscription via REST proxy using user auth
+      const planName = txData.planType;
+
+      // Update user subscription via REST proxy using user auth.
+      // Reset the processed-image counter so the new pass starts fresh.
       await updateFirestoreDocument(idToken, 'users', userId, {
         subscriptionPlan: planName,
-        subscriptionExpiresAt: expiresAt
+        subscriptionExpiresAt: expiresAt,
+        imageLimit: config.imageLimit,
+        imagesProcessedCount: 0
       });
 
       // Mark transaction as confirmed
