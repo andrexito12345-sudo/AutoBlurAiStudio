@@ -146,6 +146,18 @@ async function callWithRetry<T>(fn: () => Promise<T>, retries = 3, delay = 1000)
   }
 }
 
+// Guards against an upstream call that never settles (the Gemini SDK has no
+// built-in timeout). Without this a hung request leaves the client stuck on
+// "detecting" forever instead of failing fast so the user can retry.
+function withTimeout<T>(promise: Promise<T>, ms: number, label = 'La operación'): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error(`${label} tardó demasiado y fue cancelada (timeout ${ms}ms). Intenta de nuevo.`)), ms)
+    )
+  ]);
+}
+
 async function startServer() {
   const app = express();
   
@@ -195,7 +207,7 @@ async function startServer() {
       }
 
       const ai = getGemini();
-      const response = await callWithRetry(() => ai.models.generateContent({
+      const response = await callWithRetry(() => withTimeout(ai.models.generateContent({
         model: 'gemini-3.5-flash',
         contents: [
           {
@@ -228,7 +240,7 @@ async function startServer() {
             }
           }
         }
-      }));
+      }), 30000, 'La detección de rostros'));
 
       const rawText = response.text || '[]';
       const faces = JSON.parse(rawText.trim());
