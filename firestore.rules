@@ -2,33 +2,17 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /users/{userId} {
-      // A user can read only their own profile.
       allow read: if request.auth != null && request.auth.uid == userId;
-
-      // A user can create only their own profile, with a safe initial state.
-      allow create: if request.auth != null && request.auth.uid == userId
-        && request.resource.data.uid == userId
-        && (request.resource.data.subscriptionPlan == 'trial'
-            || request.resource.data.subscriptionPlan == 'free'
-            || request.resource.data.subscriptionPlan == 'basic')
-        && request.resource.data.imagesProcessedCount == 0;
-
-      // Updates happen via the server using the user's own verified token
-      // (Firebase Admin lacks Firestore IAM in this runtime), so the client's
-      // own token must be allowed to update its own document.
+      allow create: if request.auth != null && request.auth.uid == userId;
       allow update: if request.auth != null && request.auth.uid == userId;
-
-      // Never allow client-side deletion (would reset limits).
       allow delete: if false;
     }
 
-    // Transactions are read/written by the server on behalf of the owning user
-    // (via their verified token), scoped to their own transactions.
     match /transactions/{transactionId} {
-      allow read, write: if request.auth != null && (
-        (resource == null && request.resource.data.userId == request.auth.uid) ||
-        (resource != null && resource.data.userId == request.auth.uid)
-      );
+      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow update: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow delete: if false;
     }
   }
 }

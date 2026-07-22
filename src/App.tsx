@@ -628,43 +628,43 @@ export default function App() {
           <div className="space-y-8 animate-fadeIn">
             
             {/* Hero Header */}
-            <div className="relative overflow-hidden rounded-3xl border border-indigo-100 bg-gradient-to-br from-indigo-600 via-indigo-600 to-violet-600 px-6 py-8 sm:px-10 sm:py-10 shadow-lg shadow-indigo-200/40">
-              <div className="absolute -top-16 -right-16 h-56 w-56 rounded-full bg-white/10 blur-2xl" />
-              <div className="absolute -bottom-20 -left-10 h-56 w-56 rounded-full bg-violet-400/20 blur-2xl" />
+            <div className="relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 px-6 py-8 sm:px-10 sm:py-10 shadow-xl">
+              <div className="absolute -top-16 -right-16 h-56 w-56 rounded-full bg-blue-500/10 blur-2xl" />
+              <div className="absolute -bottom-20 -left-10 h-56 w-56 rounded-full bg-slate-800/20 blur-2xl" />
               <div className="relative flex flex-col lg:flex-row lg:items-end justify-between gap-8">
-                <div className="max-w-xl">
-                  <div className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-[11px] font-bold text-white/90 backdrop-blur-sm mb-4">
+                <div className="max-w-xl text-left">
+                  <div className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/10 px-3 py-1 text-[10px] font-bold text-blue-400 border border-blue-500/20 mb-4">
                     <Sparkles className="h-3.5 w-3.5" />
-                    <span>Difuminado inteligente de rostros con IA</span>
+                    <span>Motor de Anonimización IA Activo</span>
                   </div>
-                  <h2 className="font-display text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-                    Tu Espacio de Trabajo
+                  <h2 className="font-display text-3xl sm:text-4xl font-extrabold text-white tracking-tight leading-none">
+                    Espacio de Trabajo
                   </h2>
-                  <p className="text-sm text-indigo-100 mt-2 leading-relaxed">
-                    Sube tus fotos, aplica distintos estilos de censura y descarga los resultados en segundos.
+                  <p className="text-xs text-slate-400 mt-2 leading-relaxed">
+                    Sube imágenes en lote, elige el estilo de censura profesional y descarga tus archivos limpios de rostros y metadatos EXIF en segundos.
                   </p>
                 </div>
 
                 {/* Plan + usage cards */}
-                <div className="flex flex-col sm:flex-row gap-3 shrink-0">
-                  <div className="rounded-2xl bg-white/10 backdrop-blur-sm border border-white/15 px-4 py-3 min-w-[150px]">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-indigo-100">Tu Plan</p>
-                    <p className="text-base font-extrabold text-white mt-1 flex items-center gap-1.5">
+                <div className="flex flex-col sm:flex-row gap-3 shrink-0 text-left">
+                  <div className="rounded-xl bg-slate-800/80 backdrop-blur-sm border border-slate-700/60 px-4 py-3 min-w-[150px]">
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-slate-500">Tu Plan</p>
+                    <p className="text-sm font-extrabold text-white mt-1 flex items-center gap-1.5">
                       {isAdmin ? 'Creador' : getPlanDisplayName(profile.subscriptionPlan)}
                       {isPremium && <Zap className="h-4 w-4 text-amber-300 fill-amber-300 shrink-0" />}
                     </p>
                   </div>
-                  <div className="rounded-2xl bg-white/10 backdrop-blur-sm border border-white/15 px-4 py-3 min-w-[170px]">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-indigo-100">Imágenes</p>
-                    <p className="text-base font-extrabold text-white mt-1">
+                  <div className="rounded-xl bg-slate-800/80 backdrop-blur-sm border border-slate-700/60 px-4 py-3 min-w-[170px]">
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-slate-500">Uso de Imágenes</p>
+                    <p className="text-sm font-extrabold text-white mt-1">
                       {profile.imagesProcessedCount}
                       {isUnlimited
-                        ? <span className="text-indigo-200 text-xs font-medium"> · Ilimitado</span>
-                        : <span className="text-indigo-200 text-xs font-medium"> / {imageLimit}</span>}
+                        ? <span className="text-slate-400 text-xs font-semibold"> · Ilimitado</span>
+                        : <span className="text-slate-400 text-xs font-semibold"> / {imageLimit}</span>}
                     </p>
-                    <div className="mt-2 h-1.5 w-full rounded-full bg-white/20 overflow-hidden">
+                    <div className="mt-2 h-1.5 w-full rounded-full bg-slate-750 overflow-hidden">
                       <div
-                        className="h-full rounded-full bg-white transition-all duration-500"
+                        className="h-full rounded-full bg-blue-500 transition-all duration-500"
                         style={{ width: isUnlimited ? '100%' : `${Math.min(100, ((profile.imagesProcessedCount || 0) / imageLimit) * 100)}%` }}
                       />
                     </div>
@@ -775,49 +775,48 @@ export default function App() {
                 HERO — single viewport, product-demo centered (dark navy, blue only)
                ========================================================================= */}
             <section className="relative flex flex-col justify-center overflow-hidden rounded-[2rem] bg-slate-950 px-5 py-10 sm:px-10 sm:py-12 lg:min-h-[calc(100dvh-11.5rem)]">
-              {/* Ambient glow */}
-              <div className="pointer-events-none absolute -top-40 left-1/2 h-[26rem] w-[46rem] -translate-x-1/2 rounded-full bg-blue-600/20 blur-3xl" />
-              <div className="pointer-events-none absolute -bottom-48 -right-24 h-96 w-96 rounded-full bg-sky-500/10 blur-3xl" />
+              {/* Ambient premium glow */}
+              <div className="pointer-events-none absolute -top-40 left-1/2 h-[26rem] w-[46rem] -translate-x-1/2 rounded-full bg-blue-500/10 blur-3xl" />
+              <div className="pointer-events-none absolute -bottom-48 -right-24 h-96 w-96 rounded-full bg-blue-600/5 blur-3xl" />
 
-              <div className="relative mx-auto w-full max-w-4xl text-center">
-                {/* Status pill */}
-                <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-xs font-semibold text-slate-300 backdrop-blur-sm">
+              <div className="relative mx-auto w-full max-w-4xl text-left px-4">
+                {/* Status compliance pill */}
+                <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-[11px] font-extrabold text-slate-300 backdrop-blur-sm">
                   <span className="relative flex h-2 w-2">
-                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
-                    <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75"></span>
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-blue-500"></span>
                   </span>
-                  <span>Procesamiento local · Tus fotos nunca se guardan</span>
+                  <span>PROCESAMIENTO LOCAL EFÍMERO · 100% CONFIDENCIAL</span>
                 </div>
 
-                <h2 className="mx-auto mt-6 max-w-3xl font-display text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-[3.4rem] lg:leading-[1.06]">
-                  Sube una foto.
-                  <br className="hidden sm:block" />{' '}
-                  La IA protege <span className="text-blue-400">cada rostro</span>.
+                <h2 className="mt-6 max-w-3xl font-display text-4xl sm:text-5xl lg:text-[3.25rem] lg:leading-[1.1] font-extrabold tracking-tight text-white">
+                  Evite demandas.
+                  <br />
+                  La IA protege <span className="text-blue-500">la privacidad</span> de sus clientes.
                 </h2>
 
-                <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-slate-400 sm:text-base">
-                  Detección y difuminado automático de caras en ~3 segundos. Sin Photoshop, sin
-                  instalar nada, sin almacenar tus imágenes.
+                <p className="mt-4 max-w-2xl text-xs sm:text-sm leading-relaxed text-slate-400 font-medium">
+                  Detecte y difumine rostros de forma masiva en segundos. Cumpla con la Ley Orgánica de Protección de Datos Personales (LOPDP) en el Ecuador y evite severas multas por difusión no autorizada. Sus fotos nunca se almacenan en la nube.
                 </p>
 
                 {/* CTAs */}
-                <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
+                <div className="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
                   <button
                     onClick={handleSignIn}
-                    className="inline-flex w-full items-center justify-center gap-2.5 rounded-2xl bg-blue-600 px-7 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-900/40 transition-all hover:bg-blue-500 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer sm:w-auto"
+                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-3.5 text-xs font-extrabold text-white shadow-lg shadow-blue-500/10 transition-all hover:bg-blue-500 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer text-center"
                   >
                     <LogIn className="h-4.5 w-4.5" />
-                    <span>Comenzar gratis con Google</span>
+                    <span>Iniciar ahora gratis con Google</span>
                   </button>
-                  <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500">
-                    <ShieldCheck className="h-4 w-4 text-emerald-500" />
-                    Sin tarjeta · 10 fotos gratis
+                  <span className="inline-flex items-center justify-center gap-1.5 text-[11px] font-bold text-slate-500">
+                    <ShieldCheck className="h-4 w-4 text-emerald-500 shrink-0" />
+                    10 fotos gratis de prueba · Sin tarjeta
                   </span>
                 </div>
 
                 {/* Before / After comparison slider — the product, live */}
-                <div className="relative mx-auto mt-9 w-full max-w-3xl select-none">
-                  <div className="relative aspect-[16/9] overflow-hidden rounded-2xl border border-white/10 bg-slate-900 shadow-2xl shadow-blue-950/50">
+                <div className="relative mx-auto mt-12 w-full max-w-3xl select-none">
+                  <div className="relative aspect-[16/9] overflow-hidden rounded-xl border border-slate-800 bg-slate-900 shadow-2xl">
                     {/* Original layer */}
                     <DemoScene />
                     {/* Protected layer, revealed right of the divider */}
@@ -826,20 +825,20 @@ export default function App() {
                     </div>
 
                     {/* Corner labels */}
-                    <span className="absolute left-3 top-3 rounded-md bg-slate-950/70 px-2 py-1 font-mono text-[10px] font-bold uppercase tracking-wider text-slate-300 backdrop-blur-sm">
-                      Original
+                    <span className="absolute left-3 top-3 rounded-md bg-slate-950/80 px-2.5 py-1 font-mono text-[9px] font-extrabold uppercase tracking-wider text-slate-300 backdrop-blur-xs">
+                      Foto Original
                     </span>
-                    <span className="absolute right-3 top-3 rounded-md bg-blue-600/90 px-2 py-1 font-mono text-[10px] font-bold uppercase tracking-wider text-white backdrop-blur-sm">
-                      Protegido con IA
+                    <span className="absolute right-3 top-3 rounded-md bg-blue-600/90 px-2.5 py-1 font-mono text-[9px] font-extrabold uppercase tracking-wider text-white backdrop-blur-xs">
+                      Difuminado IA (AutoBlur)
                     </span>
 
                     {/* Divider + handle */}
                     <div
-                      className="pointer-events-none absolute inset-y-0 z-10 w-[3px] bg-white shadow-[0_0_12px_rgba(59,130,246,0.8)]"
-                      style={{ left: `calc(${revealPos}% - 1.5px)` }}
+                      className="pointer-events-none absolute inset-y-0 z-10 w-[2px] bg-white shadow-[0_0_8px_rgba(59,130,246,0.6)]"
+                      style={{ left: `calc(${revealPos}% - 1px)` }}
                     >
-                      <span className="absolute left-1/2 top-1/2 flex h-9 w-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white text-slate-900 shadow-xl">
-                        <ChevronsLeftRight className="h-4.5 w-4.5" />
+                      <span className="absolute left-1/2 top-1/2 flex h-8 w-8 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white text-slate-900 shadow-xl border border-slate-200">
+                        <ChevronsLeftRight className="h-4.5 w-4.5 text-slate-600" />
                       </span>
                     </div>
 
@@ -854,193 +853,209 @@ export default function App() {
                       className="absolute inset-0 z-20 h-full w-full cursor-ew-resize opacity-0"
                     />
                   </div>
-                  <p className="mt-3 text-xs font-medium text-slate-500">
-                    Arrastra el control para comparar — así funciona AutoBlur en tus fotos.
+                  <p className="mt-3.5 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider text-center">
+                    Arrastre el control para evaluar la precisión del algoritmo de AutoBlur
                   </p>
                 </div>
 
                 {/* Stats strip */}
-                <div className="mx-auto mt-8 flex max-w-xl flex-wrap items-center justify-center gap-x-10 gap-y-4">
+                <div className="mx-auto mt-10 flex max-w-xl flex-wrap items-center justify-center gap-y-4 gap-x-8 sm:gap-x-10">
                   <div className="text-center">
-                    <p className="font-display text-xl font-extrabold tabular-nums text-white">99.8%</p>
-                    <p className="mt-0.5 text-[11px] font-medium text-slate-500">Precisión de detección</p>
+                    <p className="font-display text-lg sm:text-xl font-extrabold tabular-nums text-white">99.8%</p>
+                    <p className="mt-0.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Eficacia de Detección</p>
                   </div>
-                  <div className="h-8 w-px bg-white/10" />
+                  <div className="h-6 w-px bg-slate-800" />
                   <div className="text-center">
-                    <p className="font-display text-xl font-extrabold tabular-nums text-white">~3s</p>
-                    <p className="mt-0.5 text-[11px] font-medium text-slate-500">Por imagen</p>
+                    <p className="font-display text-lg sm:text-xl font-extrabold tabular-nums text-white">~3 Segundos</p>
+                    <p className="mt-0.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Por Procesamiento</p>
                   </div>
-                  <div className="h-8 w-px bg-white/10" />
+                  <div className="h-6 w-px bg-slate-800" />
                   <div className="text-center">
-                    <p className="font-display text-xl font-extrabold text-white">GDPR · LOPD</p>
-                    <p className="mt-0.5 text-[11px] font-medium text-slate-500">Cumplimiento total</p>
+                    <p className="font-display text-lg sm:text-xl font-extrabold text-white">GDPR · LOPD</p>
+                    <p className="mt-0.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Cumplimiento Legal</p>
                   </div>
                 </div>
               </div>
             </section>
 
-            {/* =========================================================================
-                BENEFITS SECTION & VALUE PROP (SHARED - WITH DESKTOP/MOBILE PAIRINGS)
-               ========================================================================= */}
-            <div className="mt-16 sm:mt-24 border-t border-gray-150 pt-10 sm:pt-16">
-              <div className="max-w-2xl mx-auto text-center space-y-3 mb-10 sm:mb-14">
-                <h3 className="font-display text-2xl sm:text-3xl font-extrabold text-gray-900 leading-tight">
-                  La máxima seguridad para tus activos visuales
+            <div className="mt-16 sm:mt-24 border-t border-slate-200/60 pt-12 text-left">
+              <div className="max-w-2xl text-left space-y-3 mb-12">
+                <span className="text-[10px] font-extrabold uppercase tracking-widest text-blue-600">Tranquilidad Corporativa</span>
+                <h3 className="font-display text-2xl sm:text-3xl font-extrabold text-slate-800 leading-tight">
+                  Proteja a su empresa de sanciones costosas
                 </h3>
-                <p className="text-xs sm:text-sm text-gray-500 leading-relaxed">
-                  Cumplimos con las regulaciones de protección de datos más estrictas del mundo para garantizar una anonimización confiable.
+                <p className="text-xs sm:text-sm text-slate-500 leading-relaxed font-medium">
+                  En el Ecuador, la Ley Orgánica de Protección de Datos Personales impone multas severas de hasta el 1% de la facturación anual por difundir imágenes con rostros reconocibles sin autorización. AutoBlur le ofrece un blindaje legal inmediato.
                 </p>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
                 
-                {/* Security Feature 1 */}
-                <div className="bg-white border border-gray-150/60 rounded-3xl p-6 sm:p-7 shadow-xs hover:shadow-md transition-all text-left">
-                  <div className="h-11 w-11 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-5 border border-emerald-100">
+                {/* Benefit 1 */}
+                <div className="bg-white border border-slate-200/80 rounded-xl p-6 sm:p-7 shadow-xs hover:border-slate-300 transition-all text-left">
+                  <div className="h-11 w-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-5 border border-blue-100/50 shadow-xs">
                     <ShieldCheck className="h-5.5 w-5.5" />
                   </div>
-                  <h4 className="font-display text-sm sm:text-base font-extrabold text-gray-900">Privacidad y Confidencialidad Absoluta</h4>
-                  <p className="text-xs text-gray-500 mt-2 leading-relaxed">
-                    A diferencia de otros servicios, no retenemos tus imágenes. Las fotos se procesan en memoria efímera ultra segura y se destruyen permanentemente después del uso.
+                  <h4 className="font-display text-sm sm:text-base font-extrabold text-slate-800">Conformidad Legal LOPDP & GDPR</h4>
+                  <p className="text-xs text-slate-500 mt-2.5 leading-relaxed font-medium">
+                    Evite querellas y demandas de privacidad. Anonimice el rostro de peatones, clientes, pacientes o niños antes de publicar fotos en portales web, redes sociales o folletos.
                   </p>
                 </div>
-
-                {/* Security Feature 2 */}
-                <div className="bg-white border border-gray-150/60 rounded-3xl p-6 sm:p-7 shadow-xs hover:shadow-md transition-all text-left">
-                  <div className="h-11 w-11 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mb-5 border border-blue-100">
+ 
+                {/* Benefit 2 */}
+                <div className="bg-white border border-slate-200/80 rounded-xl p-6 sm:p-7 shadow-xs hover:border-slate-300 transition-all text-left">
+                  <div className="h-11 w-11 rounded-xl bg-slate-50 text-slate-700 flex items-center justify-center mb-5 border border-slate-200/50 shadow-xs">
                     <Lock className="h-5.5 w-5.5" />
                   </div>
-                  <h4 className="font-display text-sm sm:text-base font-extrabold text-gray-900">Eliminación Inteligente de EXIF</h4>
-                  <p className="text-xs text-gray-500 mt-2 leading-relaxed">
-                    Mantenemos tus archivos seguros limpiando los metadatos de posicionamiento GPS y firmas de cámara en el archivo exportado, bloqueando cualquier rastreo de procedencia.
+                  <h4 className="font-display text-sm sm:text-base font-extrabold text-slate-800">Limpieza de Metadatos EXIF</h4>
+                  <p className="text-xs text-slate-500 mt-2.5 leading-relaxed font-medium">
+                    AutoBlur no solo difumina rostros, sino que remueve la información técnica oculta como ubicaciones GPS y modelos de cámara de los archivos exportados, bloqueando cualquier rastreo no deseado.
                   </p>
                 </div>
-
-                {/* Security Feature 3 */}
-                <div className="bg-white border border-gray-150/60 rounded-3xl p-6 sm:p-7 shadow-xs hover:shadow-md transition-all text-left">
-                  <div className="h-11 w-11 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center mb-5 border border-sky-100">
-                    <Eye className="h-5.5 w-5.5" />
+ 
+                {/* Benefit 3 */}
+                <div className="bg-white border border-slate-200/80 rounded-xl p-6 sm:p-7 shadow-xs hover:border-slate-300 transition-all text-left">
+                  <div className="h-11 w-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-5 border border-blue-100/50 shadow-xs">
+                    <Sparkles className="h-5.5 w-5.5" />
                   </div>
-                  <h4 className="font-display text-sm sm:text-base font-extrabold text-gray-900">Optimizado para Lotes Grandes</h4>
-                  <p className="text-xs text-gray-500 mt-2 leading-relaxed">
-                    Sube hasta 10 fotos a la vez. Nuestro motor inteligente procesa todo de forma paralela en segundos, ahorrándote horas de edición manual en Photoshop.
+                  <h4 className="font-display text-sm sm:text-base font-extrabold text-slate-800">Procesamiento por Lotes Grandes</h4>
+                  <p className="text-xs text-slate-500 mt-2.5 leading-relaxed font-medium">
+                    Sube y procesa hasta 50 imágenes de forma simultánea. El motor de IA trabaja en paralelo en tu navegador en tiempo récord para que ahorres interminables horas de edición manual.
                   </p>
                 </div>
-
+ 
               </div>
             </div>
-
+ 
             {/* =========================================================================
-                HOW IT WORKS — 3 steps
+                HOW IT WORKS
                ========================================================================= */}
-            <div className="mt-16 sm:mt-24 border-t border-gray-150 pt-10 sm:pt-16">
-              <div className="max-w-2xl mx-auto text-center space-y-3 mb-10 sm:mb-14">
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-600">Cómo funciona</p>
-                <h3 className="font-display text-2xl sm:text-3xl font-extrabold text-gray-900 leading-tight">
-                  Tres pasos. Segundos. Cero esfuerzo.
+            <div className="mt-16 sm:mt-24 border-t border-slate-200/60 pt-12 text-left">
+              <div className="max-w-2xl text-left space-y-3 mb-12">
+                <span className="text-[10px] font-extrabold uppercase tracking-widest text-blue-600">Proceso Sencillo</span>
+                <h3 className="font-display text-2xl sm:text-3xl font-extrabold text-slate-800 leading-tight">
+                  Tres pasos rápidos. Cero fricción.
                 </h3>
               </div>
-
+ 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
                 {[
-                  { n: '01', icon: Upload, title: 'Sube tus fotos', desc: 'Arrastra una o varias imágenes. PNG, JPG, WEBP y formatos PRO como HEIC o TIFF.' },
-                  { n: '02', icon: Sparkles, title: 'La IA detecta los rostros', desc: 'Nuestro motor localiza cada cara automáticamente en segundos, con 99.8% de precisión.' },
-                  { n: '03', icon: ShieldCheck, title: 'Descarga protegido', desc: 'Elige el estilo de censura y descarga. Tus fotos se procesan localmente y nunca se guardan.' },
+                  { n: '01', icon: Upload, title: 'Cargue su material', desc: 'Sube una o varias imágenes de forma simultánea. Soporta PNG, JPG, WEBP y formatos modernos de celular como HEIC.' },
+                  { n: '02', icon: Sparkles, title: 'La Inteligencia Artificial opera', desc: 'El algoritmo de visión artificial rastrea, encuadra y localiza automáticamente los ojos y rostros de manera milimétrica.' },
+                  { n: '03', icon: ShieldCheck, title: 'Descargue de forma segura', desc: 'Seleccione su estilo (difuminado clásico, mosaico retro o barra de censura) y exporte sus imágenes con metadatos limpios.' },
                 ].map((step) => (
-                  <div key={step.n} className="relative bg-white border border-gray-150/60 rounded-3xl p-6 sm:p-7 shadow-xs hover:shadow-md transition-all text-left overflow-hidden">
-                    <span className="absolute top-4 right-5 font-display text-5xl font-extrabold text-gray-100 select-none">{step.n}</span>
-                    <div className="relative h-11 w-11 rounded-2xl bg-gradient-to-br from-blue-600 to-sky-500 text-white flex items-center justify-center mb-5 shadow-lg shadow-blue-200/50">
-                      <step.icon className="h-5 w-5" />
+                  <div key={step.n} className="relative bg-white border border-slate-250 rounded-xl p-6 sm:p-7 shadow-xs hover:border-slate-350 transition-all text-left overflow-hidden">
+                    <span className="absolute top-2 right-4 font-display text-5xl font-extrabold text-slate-100 select-none">{step.n}</span>
+                    <div className="relative h-11 w-11 rounded-xl bg-slate-900 text-white flex items-center justify-center mb-5 shadow-md shadow-slate-200">
+                      <step.icon className="h-5 w-5 text-blue-400" />
                     </div>
-                    <h4 className="relative font-display text-sm sm:text-base font-extrabold text-gray-900">{step.title}</h4>
-                    <p className="relative text-xs text-gray-500 mt-2 leading-relaxed">{step.desc}</p>
+                    <h4 className="relative font-display text-sm sm:text-base font-extrabold text-slate-800">{step.title}</h4>
+                    <p className="relative text-xs text-slate-500 mt-2.5 leading-relaxed font-medium">{step.desc}</p>
                   </div>
                 ))}
               </div>
             </div>
-
+ 
             {/* =========================================================================
-                PRICING — 3 passes
+                PRICING (PAY-AS-YOU-GO IN ECUADOR)
                ========================================================================= */}
-            <div className="mt-16 sm:mt-24 border-t border-gray-150 pt-10 sm:pt-16">
-              <div className="max-w-2xl mx-auto text-center space-y-3 mb-10 sm:mb-14">
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-600">Precios simples</p>
-                <h3 className="font-display text-2xl sm:text-3xl font-extrabold text-gray-900 leading-tight">
-                  Paga solo por lo que necesitas
+            <div className="mt-16 sm:mt-24 border-t border-slate-200/60 pt-12 text-left">
+              <div className="max-w-2xl text-left space-y-3 mb-12">
+                <span className="text-[10px] font-extrabold uppercase tracking-widest text-blue-600">Pases Flexibles</span>
+                <h3 className="font-display text-2xl sm:text-3xl font-extrabold text-slate-800 leading-tight">
+                  Planes de pago único sin cargos recurrentes
                 </h3>
-                <p className="text-xs sm:text-sm text-gray-500 leading-relaxed">
-                  Pases de un solo pago, sin suscripciones. Empieza gratis con 10 imágenes.
+                <p className="text-xs sm:text-sm text-slate-500 leading-relaxed font-medium">
+                  Comience gratis con 10 fotos. Desbloquee accesos temporales para procesar en lote sin cuotas mensuales molestas. Liquidación segura vía PayPhone Ecuador.
                 </p>
               </div>
-
+ 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
                 {[
-                  { name: 'Diario', price: '$1.99', unit: '/ 24 horas', imgs: '50 imágenes', accent: 'sky', featured: false },
-                  { name: 'Mensual', price: '$12.99', unit: '/ 30 días', imgs: '2000 imágenes', accent: 'indigo', featured: true },
-                  { name: 'Semanal', price: '$4.99', unit: '/ 7 días', imgs: '500 imágenes', accent: 'emerald', featured: false },
+                  { name: 'Diario', price: '$1.99', unit: '/ de un solo pago', imgs: 'Hasta 50 imágenes', desc: 'Pase de 24 horas. Excelente para profesionales independientes.', featured: false },
+                  { name: 'Mensual', price: '$12.99', unit: '/ de un solo pago', imgs: 'Hasta 2000 imágenes', desc: 'Pase de 30 días. Para inmobiliarias y agencias con volumen recurrente.', featured: true },
+                  { name: 'Semanal', price: '$4.99', unit: '/ de un solo pago', imgs: 'Hasta 500 imágenes', desc: 'Pase de 7 días. Ideal para campañas o proyectos medianos.', featured: false },
                 ].map((p) => (
                   <div
                     key={p.name}
-                    className={`relative rounded-3xl p-6 sm:p-7 flex flex-col transition-all ${
+                    className={`relative rounded-xl p-6 sm:p-7 flex flex-col justify-between transition-all ${
                       p.featured
-                        ? 'bg-gray-900 text-white shadow-2xl shadow-gray-900/20 md:-translate-y-3 md:order-2'
-                        : 'bg-white border border-gray-150/70 shadow-xs hover:shadow-md md:order-1 last:md:order-3'
+                        ? 'bg-slate-900 text-white shadow-xl md:-translate-y-3.5 md:order-2 border border-slate-800'
+                        : 'bg-white border border-slate-250 shadow-xs hover:border-slate-350 md:order-1 last:md:order-3'
                     }`}
                   >
                     {p.featured && (
-                      <span className="absolute top-0 right-6 -translate-y-1/2 rounded-full bg-gradient-to-r from-blue-600 to-sky-500 px-3 py-0.5 text-[10px] font-extrabold text-white uppercase tracking-wider">
-                        Mejor valor
+                      <span className="absolute top-0 right-6 -translate-y-1/2 rounded-full bg-blue-600 px-3 py-0.5 text-[9px] font-extrabold text-white uppercase tracking-wider">
+                        Recomendado
                       </span>
                     )}
-                    <h4 className={`text-xs font-extrabold uppercase tracking-wider ${p.featured ? 'text-blue-300' : 'text-blue-600'}`}>Plan {p.name}</h4>
-                    <div className="mt-3 flex items-baseline gap-1">
-                      <span className="font-display text-4xl font-extrabold tracking-tight">{p.price}</span>
-                      <span className={`text-xs font-semibold ${p.featured ? 'text-gray-400' : 'text-gray-500'}`}>{p.unit}</span>
+                    <div>
+                      <h4 className={`text-[10px] font-extrabold uppercase tracking-widest ${p.featured ? 'text-blue-400' : 'text-blue-600'}`}>Pase {p.name}</h4>
+                      <div className="mt-4 flex items-baseline gap-1">
+                        <span className="font-display text-4xl font-extrabold tracking-tight">{p.price}</span>
+                        <span className={`text-[11px] font-bold ${p.featured ? 'text-slate-400' : 'text-slate-400'}`}>{p.unit}</span>
+                      </div>
+                      <p className={`mt-2.5 text-xs font-semibold ${p.featured ? 'text-slate-300' : 'text-slate-600'}`}>
+                        {p.desc}
+                      </p>
+                      
+                      <div className="mt-6 h-px bg-slate-200/20"></div>
+
+                      <div className={`mt-5 flex items-center gap-2 text-xs font-extrabold ${p.featured ? 'text-white' : 'text-slate-800'}`}>
+                        <CheckCircle className={`h-4 w-4 shrink-0 ${p.featured ? 'text-blue-400' : 'text-emerald-500'}`} />
+                        <span>{p.imgs}</span>
+                      </div>
+                      <ul className={`mt-3.5 space-y-2.5 text-[11px] font-medium ${p.featured ? 'text-slate-400' : 'text-slate-500'}`}>
+                        <li className="flex items-center gap-2">
+                          <CheckCircle className={`h-3.5 w-3.5 shrink-0 ${p.featured ? 'text-blue-400' : 'text-emerald-500'}`} />
+                          <span>Sin marcas de agua</span>
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <CheckCircle className={`h-3.5 w-3.5 shrink-0 ${p.featured ? 'text-blue-400' : 'text-emerald-500'}`} />
+                          <span>Soporta HEIC, TIFF, BMP y más</span>
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <CheckCircle className={`h-3.5 w-3.5 shrink-0 ${p.featured ? 'text-blue-400' : 'text-emerald-500'}`} />
+                          <span>Procesamiento 100% en la RAM del navegador</span>
+                        </li>
+                      </ul>
                     </div>
-                    <div className={`mt-5 flex items-center gap-2 text-sm font-semibold ${p.featured ? 'text-white' : 'text-gray-800'}`}>
-                      <CheckCircle className={`h-4 w-4 ${p.featured ? 'text-blue-300' : 'text-emerald-500'}`} />
-                      {p.imgs}
-                    </div>
-                    <ul className={`mt-3 space-y-2 text-xs ${p.featured ? 'text-gray-300' : 'text-gray-500'}`}>
-                      <li className="flex items-center gap-2"><CheckCircle className={`h-3.5 w-3.5 ${p.featured ? 'text-blue-300' : 'text-emerald-500'}`} />Sin marcas de agua</li>
-                      <li className="flex items-center gap-2"><CheckCircle className={`h-3.5 w-3.5 ${p.featured ? 'text-blue-300' : 'text-emerald-500'}`} />Formatos PRO (HEIC, TIFF…)</li>
-                      <li className="flex items-center gap-2"><CheckCircle className={`h-3.5 w-3.5 ${p.featured ? 'text-blue-300' : 'text-emerald-500'}`} />Procesamiento local seguro</li>
-                    </ul>
+
                     <button
                       onClick={handleSignIn}
-                      className={`mt-6 w-full rounded-2xl py-3 text-sm font-bold transition-all active:scale-98 cursor-pointer ${
+                      className={`mt-8 w-full rounded-xl py-3 text-xs font-extrabold transition-all active:scale-97 cursor-pointer text-center ${
                         p.featured
-                          ? 'bg-white text-gray-900 hover:bg-gray-100'
-                          : 'bg-gray-900 text-white hover:bg-gray-800'
+                          ? 'bg-white text-slate-950 hover:bg-slate-50 shadow-sm'
+                          : 'bg-slate-900 text-white hover:bg-slate-800 shadow-sm'
                       }`}
                     >
-                      Comenzar
+                      Comenzar ahora
                     </button>
                   </div>
                 ))}
               </div>
             </div>
-
+ 
             {/* =========================================================================
-                FINAL CTA
+                FINAL PERSUASIVE CALL-TO-ACTION
                ========================================================================= */}
-            <div className="mt-16 sm:mt-24">
-              <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-blue-700 via-blue-600 to-sky-600 px-6 py-12 sm:px-12 sm:py-16 text-center shadow-2xl shadow-blue-300/40">
+            <div className="mt-16 sm:mt-24 text-left">
+              <div className="relative overflow-hidden rounded-2xl bg-blue-600 px-6 py-12 sm:px-12 sm:py-16 text-center shadow-2xl">
                 <div className="absolute -top-20 -right-16 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
-                <div className="absolute -bottom-24 -left-16 h-64 w-64 rounded-full bg-sky-400/20 blur-3xl" />
-                <div className="relative">
-                  <h3 className="font-display text-2xl sm:text-4xl font-extrabold text-white tracking-tight max-w-2xl mx-auto leading-tight">
-                    Protege la privacidad de tus fotos hoy mismo
+                <div className="absolute -bottom-24 -left-16 h-64 w-64 rounded-full bg-blue-400/20 blur-3xl" />
+                <div className="relative max-w-2xl mx-auto">
+                  <h3 className="font-display text-2xl sm:text-4xl font-extrabold text-white tracking-tight leading-tight">
+                    ¿Listo para proteger la reputación de su negocio?
                   </h3>
-                  <p className="mt-3 text-sm sm:text-base text-blue-100 max-w-lg mx-auto">
-                    Empieza gratis en segundos. Sin tarjeta, sin instalaciones.
+                  <p className="mt-3 text-xs sm:text-sm text-blue-100 font-medium">
+                    Evite sanciones legales y cumpla con las leyes de protección de datos hoy mismo de forma automatizada y confidencial.
                   </p>
                   <button
                     onClick={handleSignIn}
-                    className="mt-8 inline-flex items-center justify-center gap-2.5 rounded-2xl bg-white px-8 py-4 text-sm font-bold text-gray-900 shadow-xl transition-all hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
+                    className="mt-8 inline-flex items-center justify-center gap-2.5 rounded-xl bg-white px-7 py-3.5 text-xs font-extrabold text-slate-900 shadow-xl transition-all hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
                   >
                     <LogIn className="h-5 w-5" />
-                    <span>Comenzar gratis con Google</span>
+                    <span>Empezar con su cuenta de Google</span>
                   </button>
                 </div>
               </div>

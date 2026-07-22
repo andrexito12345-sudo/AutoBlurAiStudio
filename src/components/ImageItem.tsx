@@ -235,7 +235,7 @@ export default function ImageItem({
               <input
                 type="range"
                 min="3"
-                max="60"
+                max="75"
                 disabled={blurStyle === 'censored'}
                 value={intensity}
                 onChange={(e) => setIntensity(Number(e.target.value))}
@@ -437,7 +437,7 @@ export default function ImageItem({
                   <input
                     type="range"
                     min="3"
-                    max="60"
+                    max="75"
                     disabled={blurStyle === 'censored'}
                     value={intensity}
                     onChange={(e) => setIntensity(Number(e.target.value))}

@@ -66,20 +66,20 @@ export default function BatchControls({
   if (totalFiles === 0) return null;
 
   return (
-    <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 rounded-2xl border border-indigo-100 bg-indigo-50/20 p-5 shadow-inner">
+    <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 rounded-2xl border border-slate-250 bg-slate-50/80 p-5 shadow-inner">
       {/* Metrics / Overview */}
       <div className="flex items-center gap-6">
         <div className="text-left">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-indigo-400">Archivos</p>
-          <p className="text-xl font-extrabold text-gray-900 leading-tight">
-            {processedFiles} <span className="text-gray-450 text-xs font-semibold">/ {totalFiles} listos</span>
+          <p className="text-[9px] font-extrabold uppercase tracking-widest text-slate-400">Archivos en lote</p>
+          <p className="text-xl font-extrabold text-slate-800 leading-tight mt-1.5">
+            {processedFiles} <span className="text-slate-500 text-xs font-semibold">/ {totalFiles} listos</span>
           </p>
         </div>
-        <div className="h-8 w-px bg-indigo-100"></div>
+        <div className="h-8 w-px bg-slate-200"></div>
         <div className="text-left">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-indigo-400">Rostros Detectados</p>
-          <p className="text-xl font-extrabold text-gray-900 leading-tight">
-            {totalFaces} <span className="text-gray-450 text-xs font-semibold">caras</span>
+          <p className="text-[9px] font-extrabold uppercase tracking-widest text-slate-400">Rostros Detectados</p>
+          <p className="text-xl font-extrabold text-slate-800 leading-tight mt-1.5">
+            {totalFaces} <span className="text-slate-500 text-xs font-semibold">{totalFaces === 1 ? 'cara' : 'caras'}</span>
           </p>
         </div>
       </div>
@@ -90,10 +90,10 @@ export default function BatchControls({
           <button
             onClick={isBlocked ? onOpenBilling : onProcessAll}
             disabled={isProcessingAny}
-            className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-xs font-bold text-white shadow-md transition-all cursor-pointer ${
+            className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-xs font-extrabold text-white shadow-md transition-all cursor-pointer ${
               isBlocked 
-                ? 'bg-gray-400 hover:bg-indigo-600 shadow-gray-100 hover:shadow-indigo-150' 
-                : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-100 active:scale-95'
+                ? 'bg-slate-400 hover:bg-slate-500 shadow-slate-100' 
+                : 'bg-slate-900 hover:bg-slate-800 shadow-slate-200 active:scale-95'
             }`}
           >
             {isProcessingAny ? (
@@ -103,7 +103,7 @@ export default function BatchControls({
               </>
             ) : (
               <>
-                {isBlocked ? <Lock className="h-4 w-4" /> : <Play className="h-4 w-4 fill-white" />}
+                {isBlocked ? <Lock className="h-4 w-4" /> : <Play className="h-4 w-4 fill-white text-white" />}
                 <span>{isBlocked ? 'Desbloquear Lote con Premium' : 'Procesar Todo el Lote'}</span>
               </>
             )}

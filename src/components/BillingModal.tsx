@@ -112,28 +112,28 @@ export default function BillingModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-950/60 backdrop-blur-xs overflow-y-auto">
-      <div className="relative w-full max-w-4xl rounded-3xl bg-white p-6 sm:p-8 shadow-2xl border border-gray-100 max-h-[95vh] overflow-y-auto my-auto animate-fadeIn">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md overflow-y-auto">
+      <div className="relative w-full max-w-4xl rounded-2xl bg-white p-6 sm:p-8 shadow-2xl border border-slate-100 max-h-[92vh] overflow-y-auto my-auto animate-fadeIn text-left">
         
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 transition-all active:scale-95 cursor-pointer z-10"
+          className="absolute top-5 right-5 flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition-all active:scale-95 cursor-pointer z-10"
         >
           <X className="h-4 w-4" />
         </button>
 
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-orange-50 px-3.5 py-1 text-xs font-bold text-orange-700 mb-3 border border-orange-100">
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3.5 py-1.5 text-[11px] font-extrabold text-blue-700 mb-3 border border-blue-100/50">
             <span className="text-sm">🇪🇨</span>
-            <span>Pasarela de Pago Oficial de PayPhone</span>
+            <span>Pasarela de Pago Segura PayPhone Ecuador</span>
           </div>
-          <h2 className="font-sans text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
-            Desbloquea AutoBlur Pro con PayPhone
+          <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+            Evite Sanciones y Proteja su Negocio
           </h2>
-          <p className="mt-2 text-gray-500 text-xs sm:text-sm max-w-lg mx-auto leading-relaxed">
-            Obtén procesamiento masivo e ilimitado de imágenes con IA de la forma más rápida y segura del Ecuador.
+          <p className="mt-2 text-slate-500 text-xs sm:text-sm max-w-xl mx-auto leading-relaxed font-medium">
+            Desbloquee el procesamiento profesional ilimitado en lote con IA. Ideal para inmobiliarias, agencias de marketing, fotógrafos y empresas comprometidas con las normativas LOPD & GDPR.
           </p>
         </div>
 
@@ -143,29 +143,29 @@ export default function BillingModal({
           {/* 1. PLAN DIARIO */}
           <button
             onClick={() => setSelectedPlan('daily')}
-            className={`text-left relative rounded-2xl border p-5 transition-all cursor-pointer flex flex-col justify-between ${
+            className={`text-left relative rounded-xl border p-5 transition-all cursor-pointer flex flex-col justify-between ${
               selectedPlan === 'daily'
-                ? 'border-sky-600 bg-sky-50/20 ring-2 ring-sky-600/10'
-                : 'border-gray-200 bg-white hover:border-gray-300'
+                ? 'border-slate-900 bg-slate-50/50 ring-1 ring-slate-900/5 shadow-xs'
+                : 'border-slate-200 bg-white hover:border-slate-300 shadow-xs'
             }`}
           >
             <div>
-              <div className="flex justify-between items-start">
-                <span className="text-xs font-extrabold text-sky-600 uppercase tracking-wider">Plan Diario</span>
-                {selectedPlan === 'daily' && <span className="h-2 w-2 rounded-full bg-sky-600"></span>}
+              <div className="flex justify-between items-center">
+                <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Pase 24 Horas</span>
+                {selectedPlan === 'daily' && <span className="h-2.5 w-2.5 rounded-full bg-blue-500"></span>}
               </div>
-              <p className="text-xs text-gray-500 mt-1">Acceso por 24 horas. Ideal para un trabajo puntual.</p>
-              <div className="mt-3 flex items-baseline text-gray-900">
+              <p className="text-xs text-slate-500 mt-2 font-medium leading-relaxed">Ideal para proyectos rápidos o entregas inmediatas de un solo día.</p>
+              <div className="mt-4 flex items-baseline text-slate-900">
                 <span className="text-3xl font-extrabold tracking-tight">$1.99</span>
-                <span className="ml-1 text-[11px] font-semibold text-gray-500">/ 24 horas</span>
+                <span className="ml-1.5 text-[11px] font-bold text-slate-400">/ de un solo pago</span>
               </div>
-              <ul className="mt-4 space-y-2 text-[11px] text-gray-600">
-                <li className="flex items-center gap-1.5">
-                  <Check className="h-3.5 w-3.5 text-emerald-500" />
-                  <span>Hasta 50 imágenes</span>
+              <ul className="mt-5 space-y-2 text-[11px] text-slate-600 font-medium">
+                <li className="flex items-center gap-2">
+                  <Check className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                  <span>Hasta 50 imágenes en lote</span>
                 </li>
-                <li className="flex items-center gap-1.5">
-                  <Check className="h-3.5 w-3.5 text-emerald-500" />
+                <li className="flex items-center gap-2">
+                  <Check className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
                   <span>Sin marcas de agua</span>
                 </li>
               </ul>
@@ -175,29 +175,29 @@ export default function BillingModal({
           {/* 2. PLAN SEMANAL */}
           <button
             onClick={() => setSelectedPlan('weekly')}
-            className={`text-left relative rounded-2xl border p-5 transition-all cursor-pointer flex flex-col justify-between ${
+            className={`text-left relative rounded-xl border p-5 transition-all cursor-pointer flex flex-col justify-between ${
               selectedPlan === 'weekly'
-                ? 'border-emerald-600 bg-emerald-50/20 ring-2 ring-emerald-600/10'
-                : 'border-gray-200 bg-white hover:border-gray-300'
+                ? 'border-slate-900 bg-slate-50/50 ring-1 ring-slate-900/5 shadow-xs'
+                : 'border-slate-200 bg-white hover:border-slate-300 shadow-xs'
             }`}
           >
             <div>
-              <div className="flex justify-between items-start">
-                <span className="text-xs font-extrabold text-emerald-600 uppercase tracking-wider">Plan Semanal</span>
-                {selectedPlan === 'weekly' && <span className="h-2 w-2 rounded-full bg-emerald-600"></span>}
+              <div className="flex justify-between items-center">
+                <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Pase 7 Días</span>
+                {selectedPlan === 'weekly' && <span className="h-2.5 w-2.5 rounded-full bg-blue-500"></span>}
               </div>
-              <p className="text-xs text-gray-500 mt-1">Acceso por 7 días. Para proyectos de varios días.</p>
-              <div className="mt-3 flex items-baseline text-gray-900">
+              <p className="text-xs text-slate-500 mt-2 font-medium leading-relaxed">Perfecto para editores de contenido y fotógrafos semanales.</p>
+              <div className="mt-4 flex items-baseline text-slate-900">
                 <span className="text-3xl font-extrabold tracking-tight">$4.99</span>
-                <span className="ml-1 text-[11px] font-semibold text-gray-500">/ 7 días</span>
+                <span className="ml-1.5 text-[11px] font-bold text-slate-400">/ de un solo pago</span>
               </div>
-              <ul className="mt-4 space-y-2 text-[11px] text-gray-600">
-                <li className="flex items-center gap-1.5">
-                  <Check className="h-3.5 w-3.5 text-emerald-500" />
-                  <span>Hasta 500 imágenes</span>
+              <ul className="mt-5 space-y-2 text-[11px] text-slate-600 font-medium">
+                <li className="flex items-center gap-2">
+                  <Check className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                  <span>Hasta 500 imágenes en lote</span>
                 </li>
-                <li className="flex items-center gap-1.5">
-                  <Check className="h-3.5 w-3.5 text-emerald-500" />
+                <li className="flex items-center gap-2">
+                  <Check className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
                   <span>Sin marcas de agua</span>
                 </li>
               </ul>
@@ -207,33 +207,33 @@ export default function BillingModal({
           {/* 3. PLAN MENSUAL (MEJOR VALOR) */}
           <button
             onClick={() => setSelectedPlan('monthly')}
-            className={`text-left relative rounded-2xl border p-5 transition-all cursor-pointer flex flex-col justify-between ${
+            className={`text-left relative rounded-xl border p-5 transition-all cursor-pointer flex flex-col justify-between ${
               selectedPlan === 'monthly'
-                ? 'border-indigo-600 bg-indigo-50/20 ring-2 ring-indigo-600/10'
-                : 'border-indigo-300 bg-white hover:border-indigo-400'
+                ? 'border-slate-900 bg-slate-50/70 ring-1 ring-slate-900/5 shadow-xs'
+                : 'border-slate-300 bg-white hover:border-slate-400 shadow-xs'
             }`}
           >
-            <div className="absolute top-0 right-4 -translate-y-1/2 rounded-full bg-indigo-600 px-2 py-0.5 text-[9px] font-extrabold text-white uppercase tracking-widest">
+            <div className="absolute top-0 right-4 -translate-y-1/2 rounded-full bg-slate-900 px-2.5 py-0.5 text-[9px] font-extrabold text-white uppercase tracking-wider">
               Mejor Valor
             </div>
             <div>
-              <div className="flex justify-between items-start">
-                <span className="text-xs font-extrabold text-indigo-600 uppercase tracking-wider">Plan Mensual</span>
-                {selectedPlan === 'monthly' && <span className="h-2 w-2 rounded-full bg-indigo-600"></span>}
+              <div className="flex justify-between items-center">
+                <span className="text-[10px] font-extrabold text-slate-900 uppercase tracking-widest">Pase 30 Días</span>
+                {selectedPlan === 'monthly' && <span className="h-2.5 w-2.5 rounded-full bg-blue-500"></span>}
               </div>
-              <p className="text-xs text-gray-500 mt-1">Acceso por 30 días al menor precio por imagen.</p>
-              <div className="mt-3 flex items-baseline text-gray-900">
+              <p className="text-xs text-slate-500 mt-2 font-medium leading-relaxed">Para empresas, agencias de publicidad y uso recurrente profesional.</p>
+              <div className="mt-4 flex items-baseline text-slate-900">
                 <span className="text-3xl font-extrabold tracking-tight">$12.99</span>
-                <span className="ml-1 text-[11px] font-semibold text-gray-500">/ 30 días</span>
+                <span className="ml-1.5 text-[11px] font-bold text-slate-400">/ de un solo pago</span>
               </div>
-              <ul className="mt-4 space-y-2 text-[11px] text-gray-600">
-                <li className="flex items-center gap-1.5">
-                  <Check className="h-3.5 w-3.5 text-emerald-500" />
-                  <span>Hasta 2000 imágenes</span>
+              <ul className="mt-5 space-y-2 text-[11px] text-slate-600 font-medium">
+                <li className="flex items-center gap-2">
+                  <Check className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                  <span>Hasta 2000 imágenes en lote</span>
                 </li>
-                <li className="flex items-center gap-1.5">
-                  <Check className="h-3.5 w-3.5 text-emerald-500" />
-                  <span>Sin marcas de agua + prioridad</span>
+                <li className="flex items-center gap-2">
+                  <Check className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                  <span>Soporte prioritario 24/7</span>
                 </li>
               </ul>
             </div>
@@ -242,37 +242,37 @@ export default function BillingModal({
         </div>
 
         {/* Interactive Payment Checkout Box */}
-        <div className="border border-gray-150 rounded-2xl bg-gray-50/50 p-5 sm:p-6 max-w-xl mx-auto">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-gray-100 pb-3 mb-4 text-left">
+        <div className="border border-slate-150 rounded-xl bg-slate-50/50 p-5 sm:p-6 max-w-xl mx-auto">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-200 pb-3.5 mb-4 text-left">
             <div>
-              <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Plan Seleccionado</h4>
-              <p className="text-sm font-extrabold text-gray-800 mt-0.5">
-                {selectedPlan === 'daily' ? 'Pase Diario ($1.99)' : selectedPlan === 'weekly' ? 'Pase Semanal ($4.99)' : 'Pase Mensual ($12.99)'}
+              <h4 className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">Plan Seleccionado</h4>
+              <p className="text-sm font-extrabold text-slate-800 mt-0.5">
+                {selectedPlan === 'daily' ? 'Pase Diario - 24 Horas de Acceso ($1.99)' : selectedPlan === 'weekly' ? 'Pase Semanal - 7 Días de Acceso ($4.99)' : 'Pase Mensual - 30 Días de Acceso ($12.99)'}
               </p>
             </div>
             <div className="mt-2 sm:mt-0">
-              <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-lg text-orange-700 bg-orange-100">
-                <Coins className="h-3.5 w-3.5" />
+              <span className="inline-flex items-center gap-1 text-[10px] font-extrabold px-2.5 py-1 rounded-full text-slate-700 bg-slate-200/60 border border-slate-300/30">
+                <Coins className="h-3.5 w-3.5 text-slate-500" />
                 <span>USD</span>
               </span>
             </div>
           </div>
 
-          <p className="text-xs text-gray-500 text-left mb-5 leading-relaxed">
-            Ingresa tu tarjeta de crédito o débito Visa, Mastercard de forma rápida. La pasarela es procesada con total seguridad por PayPhone.
+          <p className="text-[11px] text-slate-500 text-left mb-5 leading-relaxed font-semibold">
+            Protección de datos garantizada. Ingrese su tarjeta Visa, Mastercard o liquide usando su saldo PayPhone. La transacción cuenta con encriptación SSL de nivel bancario.
           </p>
 
           {/* Payphone Embed Container */}
           <div className="flex flex-col items-center justify-center min-h-[70px] relative">
             {preparing && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-50/70 z-10 gap-2">
-                <Loader2 className="h-6 w-6 animate-spin text-orange-600" />
-                <span className="text-[11px] text-gray-500 font-bold">Generando enlace seguro...</span>
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-50/70 z-10 gap-2">
+                <Loader2 className="h-6 w-6 animate-spin text-slate-900" />
+                <span className="text-[11px] text-slate-500 font-extrabold">Generando enlace seguro con PayPhone...</span>
               </div>
             )}
 
             {prepareError && (
-              <div className="w-full text-left bg-red-50 border border-red-100 rounded-xl p-3 mb-4 flex items-start gap-2 animate-fadeIn">
+              <div className="w-full text-left bg-red-50 border border-red-100/50 rounded-xl p-3.5 mb-4 flex items-start gap-2.5 animate-fadeIn">
                 <AlertCircle className="h-4 w-4 text-red-600 shrink-0 mt-0.5" />
                 <p className="text-[11px] font-semibold text-red-700 leading-relaxed">{prepareError}</p>
               </div>
@@ -282,7 +282,7 @@ export default function BillingModal({
             <div id="pp-button" className="w-full max-w-xs transition-all duration-300"></div>
           </div>
 
-          <div className="mt-5 flex items-center justify-center gap-1.5 text-[10px] text-gray-400">
+          <div className="mt-5 flex items-center justify-center gap-1.5 text-[10px] text-slate-400 font-bold">
             <Shield className="h-3.5 w-3.5 text-emerald-500" />
             <span>Encriptación de datos segura SSL de 256 bits.</span>
           </div>

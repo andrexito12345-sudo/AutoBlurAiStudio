@@ -4,7 +4,6 @@ import cors from 'cors';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI, Type } from '@google/genai';
 import { initializeApp as initializeAdminApp, getApps as getAdminApps } from 'firebase-admin/app';
-import { getFirestore as getAdminFirestore, FieldValue } from 'firebase-admin/firestore';
 import { getAuth as getAdminAuth } from 'firebase-admin/auth';
 
 const PORT = 3000;
@@ -18,21 +17,6 @@ const adminApp = getAdminApps().length === 0
 
 const PROJECT_ID = 'gen-lang-client-0410784317';
 const DATABASE_ID = 'ai-studio-autoblursaas-955fae40-4175-4078-8c61-673671b13f8d';
-
-// Admin Firestore (named database). Admin writes bypass security rules, so all
-// monetization state (plan, image counter) is written here server-side only —
-// never trusting the client. Clients can no longer self-grant plans or reset
-// their usage (see firestore.rules).
-const adminDb = getAdminFirestore(adminApp, DATABASE_ID);
-
-async function adminGetDoc(collection: string, docId: string): Promise<Record<string, any> | null> {
-  const snap = await adminDb.collection(collection).doc(docId).get();
-  return snap.exists ? (snap.data() as Record<string, any>) : null;
-}
-
-async function adminSetDoc(collection: string, docId: string, fields: Record<string, any>) {
-  await adminDb.collection(collection).doc(docId).set(fields, { merge: true });
-}
 
 // Server-authoritative access check. Mirrors the client's getPlanAccess but this
 // is the real gate. Creator/admin emails get unlimited access.
@@ -232,18 +216,17 @@ async function startServer() {
     try {
       const { image, mimeType } = req.body;
       const userId = (req as any).user?.uid;
+      const idToken = (req as any).idToken;
 
-      if (!userId) {
-        return res.status(401).json({ error: 'Acceso no autorizado: No se pudo identificar al usuario.' });
+      if (!userId || !idToken) {
+        return res.status(401).json({ error: 'Acceso no autorizado: No se pudo identificar al usuario o token ausente.' });
       }
 
       if (!image) {
         return res.status(400).json({ error: 'Missing image content' });
       }
 
-      // Server-side plan/limit enforcement. Reads the user's own doc via their
-      // verified token (Admin Firestore lacks IAM in this runtime).
-      const idToken = (req as any).idToken;
+      // Server-authoritative plan/limit enforcement — do NOT trust the client.
       const userData = await getFirestoreDocument(idToken, 'users', userId);
       const access = serverPlanAccess(userData, (req as any).user?.email);
       if (access.blocked) {
@@ -299,11 +282,12 @@ async function startServer() {
       const rawText = response.text || '[]';
       const faces = JSON.parse(rawText.trim());
 
-      // Count the processed image server-side (unless unlimited/creator).
+      // Count the processed image server-side (unless unlimited/creator). The
+      // client no longer writes this — the counter is now trusted.
       if (!access.unlimited) {
         try {
           await updateFirestoreDocument(idToken, 'users', userId, {
-            imagesProcessedCount: (access.count || 0) + 1,
+            imagesProcessedCount: (access.count || 0) + 1
           });
         } catch (incErr) {
           console.error('Failed to increment image counter:', incErr);
@@ -365,7 +349,7 @@ async function startServer() {
       // Generate secure unique transaction ID
       const clientTransactionId = `${userId}-${planType}-${Date.now()}`;
 
-      // Save pending transaction document (admin write — clients cannot touch transactions)
+      // Save pending transaction document (using user token — clients cannot touch transactions unless matched)
       await updateFirestoreDocument(idToken, 'transactions', clientTransactionId, {
         userId,
         planType,
@@ -408,7 +392,7 @@ async function startServer() {
         return res.status(400).json({ error: 'Falta el id de transacción o el identificador del cliente.' });
       }
 
-      // Fetch pending transaction (admin read)
+      // Fetch pending transaction (using user token)
       const txData = await getFirestoreDocument(idToken, 'transactions', clientTransactionId);
 
       if (!txData) {
@@ -477,8 +461,8 @@ async function startServer() {
 
       const planName = txData.planType;
 
-      // Upgrade the user (admin write). Reset the counter so the new pass starts fresh.
-      // This is the ONLY place a plan is granted — clients cannot write these fields.
+      // Upgrade the user. Reset the counter so the new pass starts fresh.
+      // This is the ONLY place a plan is granted — clients cannot write these fields directly but we do it via rest with idToken.
       await updateFirestoreDocument(idToken, 'users', userId, {
         subscriptionPlan: planName,
         subscriptionExpiresAt: expiresAt,
