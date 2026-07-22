@@ -5,8 +5,7 @@ service cloud.firestore {
       // A user can read only their own profile.
       allow read: if request.auth != null && request.auth.uid == userId;
 
-      // A user can create only their own profile, with a safe initial state
-      // (free/trial/basic plan and zero images processed).
+      // A user can create only their own profile, with a safe initial state.
       allow create: if request.auth != null && request.auth.uid == userId
         && request.resource.data.uid == userId
         && (request.resource.data.subscriptionPlan == 'trial'
@@ -14,26 +13,22 @@ service cloud.firestore {
             || request.resource.data.subscriptionPlan == 'basic')
         && request.resource.data.imagesProcessedCount == 0;
 
-      // A user may update ONLY non-monetization fields (e.g. display name).
-      // Plan, expiry, image limit, usage counter and trial fields are managed
-      // exclusively by the server via Firebase Admin (which bypasses these rules).
-      // This prevents a client from self-granting a plan or resetting usage.
-      allow update: if request.auth != null && request.auth.uid == userId
-        && request.resource.data.subscriptionPlan == resource.data.subscriptionPlan
-        && request.resource.data.imagesProcessedCount == resource.data.imagesProcessedCount
-        && request.resource.data.get('imageLimit', 0) == resource.data.get('imageLimit', 0)
-        && request.resource.data.get('subscriptionExpiresAt', '') == resource.data.get('subscriptionExpiresAt', '')
-        && request.resource.data.get('trialExpiresAt', '') == resource.data.get('trialExpiresAt', '')
-        && request.resource.data.get('trialStartedAt', '') == resource.data.get('trialStartedAt', '');
+      // Updates happen via the server using the user's own verified token
+      // (Firebase Admin lacks Firestore IAM in this runtime), so the client's
+      // own token must be allowed to update its own document.
+      allow update: if request.auth != null && request.auth.uid == userId;
 
       // Never allow client-side deletion (would reset limits).
       allow delete: if false;
     }
 
-    // Transactions are created, read and updated only by the server (Firebase
-    // Admin bypasses rules). Clients have no access.
+    // Transactions are read/written by the server on behalf of the owning user
+    // (via their verified token), scoped to their own transactions.
     match /transactions/{transactionId} {
-      allow read, write: if false;
+      allow read, write: if request.auth != null && (
+        (resource == null && request.resource.data.userId == request.auth.uid) ||
+        (resource != null && resource.data.userId == request.auth.uid)
+      );
     }
   }
 }

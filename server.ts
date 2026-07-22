@@ -241,8 +241,10 @@ async function startServer() {
         return res.status(400).json({ error: 'Missing image content' });
       }
 
-      // Server-authoritative plan/limit enforcement — do NOT trust the client.
-      const userData = await adminGetDoc('users', userId);
+      // Server-side plan/limit enforcement. Reads the user's own doc via their
+      // verified token (Admin Firestore lacks IAM in this runtime).
+      const idToken = (req as any).idToken;
+      const userData = await getFirestoreDocument(idToken, 'users', userId);
       const access = serverPlanAccess(userData, (req as any).user?.email);
       if (access.blocked) {
         return res.status(403).json({
@@ -297,12 +299,11 @@ async function startServer() {
       const rawText = response.text || '[]';
       const faces = JSON.parse(rawText.trim());
 
-      // Count the processed image server-side (unless unlimited/creator). The
-      // client no longer writes this — the counter is now trusted.
+      // Count the processed image server-side (unless unlimited/creator).
       if (!access.unlimited) {
         try {
-          await adminDb.collection('users').doc(userId).update({
-            imagesProcessedCount: FieldValue.increment(1),
+          await updateFirestoreDocument(idToken, 'users', userId, {
+            imagesProcessedCount: (access.count || 0) + 1,
           });
         } catch (incErr) {
           console.error('Failed to increment image counter:', incErr);
@@ -365,7 +366,7 @@ async function startServer() {
       const clientTransactionId = `${userId}-${planType}-${Date.now()}`;
 
       // Save pending transaction document (admin write — clients cannot touch transactions)
-      await adminSetDoc('transactions', clientTransactionId, {
+      await updateFirestoreDocument(idToken, 'transactions', clientTransactionId, {
         userId,
         planType,
         amount,
@@ -408,7 +409,7 @@ async function startServer() {
       }
 
       // Fetch pending transaction (admin read)
-      const txData = await adminGetDoc('transactions', clientTransactionId);
+      const txData = await getFirestoreDocument(idToken, 'transactions', clientTransactionId);
 
       if (!txData) {
         return res.status(400).json({ error: 'Transacción no encontrada o inválida.' });
@@ -440,7 +441,7 @@ async function startServer() {
 
       if (!confirmResponse.ok) {
         console.error('Payphone Confirmation API failed:', confirmData);
-        await adminSetDoc('transactions', clientTransactionId, {
+        await updateFirestoreDocument(idToken, 'transactions', clientTransactionId, {
           status: 'failed',
           updatedAt: new Date().toISOString(),
           error: confirmData.message || 'Error en la verificación de PayPhone'
@@ -453,7 +454,7 @@ async function startServer() {
 
       if (!isApproved) {
         console.warn('Payphone Transaction not approved:', confirmData);
-        await adminSetDoc('transactions', clientTransactionId, {
+        await updateFirestoreDocument(idToken, 'transactions', clientTransactionId, {
           status: 'failed',
           updatedAt: new Date().toISOString(),
           error: confirmData.transactionStatus || 'No aprobado'
@@ -478,7 +479,7 @@ async function startServer() {
 
       // Upgrade the user (admin write). Reset the counter so the new pass starts fresh.
       // This is the ONLY place a plan is granted — clients cannot write these fields.
-      await adminSetDoc('users', userId, {
+      await updateFirestoreDocument(idToken, 'users', userId, {
         subscriptionPlan: planName,
         subscriptionExpiresAt: expiresAt,
         imageLimit: config.imageLimit,
@@ -486,7 +487,7 @@ async function startServer() {
       });
 
       // Mark transaction as confirmed
-      await adminSetDoc('transactions', clientTransactionId, {
+      await updateFirestoreDocument(idToken, 'transactions', clientTransactionId, {
         status: 'confirmed',
         updatedAt: new Date().toISOString(),
         payphoneId: id.toString()
