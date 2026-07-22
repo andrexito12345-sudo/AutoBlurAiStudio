@@ -26,9 +26,7 @@ import {
   Shield,
   Zap,
   AlertTriangle,
-  Droplet,
-  Grid3x3,
-  SquareStack
+  ChevronsLeftRight
 } from 'lucide-react';
 import { UserProfile, ProcessingTask, SubscriptionPlan } from './types';
 import Navbar from './components/Navbar';
@@ -82,6 +80,65 @@ function getPlanAccess(profile: UserProfile | null, now: Date) {
   return { plan, isAdmin: false, isPaidActive, unlimited: false, imageLimit, count, isTrialExpired, isLimitReached, isBlocked };
 }
 
+// Stylized street-photo scene for the hero comparison slider. Rendered twice:
+// original (sharp faces) and protected (blurred faces + AI detection boxes).
+function DemoScene({ protectedMode }: { protectedMode?: boolean }) {
+  const fid = protectedMode ? 'hero-face-blur' : 'hero-face-none';
+  const people = [
+    { x: 190, y: 235, s: 1.0, skin: '#f5c9a4', hair: '#2f2118', shirt: '#334155' },
+    { x: 400, y: 210, s: 1.18, skin: '#d99e70', hair: '#151210', shirt: '#0e7490' },
+    { x: 610, y: 245, s: 0.94, skin: '#f0b98d', hair: '#3e2c20', shirt: '#7c2d12' },
+  ];
+  return (
+    <svg viewBox="0 0 800 450" className="absolute inset-0 h-full w-full" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <defs>
+        <linearGradient id={`${fid}-sky`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#bfdbfe" />
+          <stop offset="0.65" stopColor="#e2e8f0" />
+          <stop offset="1" stopColor="#cbd5e1" />
+        </linearGradient>
+        <filter id={`${fid}-blur`} x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation={protectedMode ? 9 : 0} />
+        </filter>
+      </defs>
+      {/* Background */}
+      <rect width="800" height="450" fill={`url(#${fid}-sky)`} />
+      <rect y="330" width="800" height="120" fill="#94a3b8" opacity="0.5" />
+      {/* Distant buildings */}
+      <rect x="40" y="120" width="90" height="215" rx="4" fill="#64748b" opacity="0.35" />
+      <rect x="150" y="80" width="70" height="255" rx="4" fill="#64748b" opacity="0.25" />
+      <rect x="640" y="100" width="110" height="235" rx="4" fill="#64748b" opacity="0.3" />
+      {people.map((p, i) => (
+        <g key={i} transform={`translate(${p.x} ${p.y}) scale(${p.s})`}>
+          {/* Body */}
+          <path d="M-62 200 C-62 92 62 92 62 200 Z" fill={p.shirt} />
+          <rect x="-10" y="62" width="20" height="26" fill={p.skin} />
+          {/* Head (blurred in protected mode) */}
+          <g filter={`url(#${fid}-blur)`}>
+            <circle cx="0" cy="18" r="46" fill={p.skin} />
+            <path d="M-46 12 C-46 -52 46 -52 46 12 C46 20 48 28 48 32 C20 4 -20 4 -48 32 C-48 28 -46 20 -46 12 Z" fill={p.hair} />
+            {!protectedMode && (
+              <>
+                <circle cx="-16" cy="16" r="4.5" fill="#1e293b" />
+                <circle cx="16" cy="16" r="4.5" fill="#1e293b" />
+                <path d="M-10 38 Q0 46 10 38" stroke="#1e293b" strokeWidth="3.5" strokeLinecap="round" fill="none" />
+              </>
+            )}
+          </g>
+          {/* AI detection box in protected mode */}
+          {protectedMode && (
+            <>
+              <rect x="-52" y="-38" width="104" height="112" rx="10" fill="none" stroke="#3b82f6" strokeWidth="3" />
+              <rect x="-52" y="-58" width="66" height="17" rx="4" fill="#2563eb" />
+              <text x="-45" y="-45.5" fill="#ffffff" fontSize="11" fontFamily="monospace" fontWeight="bold">BLUR OK</text>
+            </>
+          )}
+        </g>
+      ))}
+    </svg>
+  );
+}
+
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -90,8 +147,7 @@ export default function App() {
   const [globalLoading, setGlobalLoading] = useState(true);
   const [isProcessingAny, setIsProcessingAny] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [demoFilter, setDemoFilter] = useState<'gaussian' | 'pixel' | 'censored'>('gaussian');
-  const [demoIntensity, setDemoIntensity] = useState(20);
+  const [revealPos, setRevealPos] = useState(55);
 
   // PayPhone Confirmation States
   const [confirmingPayment, setConfirmingPayment] = useState(false);
@@ -716,385 +772,112 @@ export default function App() {
           <div className="w-full max-w-6xl mx-auto px-4 py-6 sm:py-10 md:py-16 animate-fadeIn">
             
             {/* =========================================================================
-                DESKTOP-ONLY LAYOUT (lg:grid)
-                A premium, asymmetrical bento-split featuring interactive live demo.
+                HERO — single viewport, product-demo centered (dark navy, blue only)
                ========================================================================= */}
-            <div className="hidden lg:grid lg:grid-cols-12 gap-12 items-center">
-              
-              {/* Left Column: Premium Value Proposition & CTA */}
-              <div className="lg:col-span-7 space-y-6 text-left">
-                
-                {/* Trust Badge */}
-                <div className="inline-flex items-center gap-2.5 rounded-full bg-white border border-gray-200/80 px-4 py-1.5 text-xs font-semibold text-gray-700 shadow-sm">
+            <section className="relative flex flex-col justify-center overflow-hidden rounded-[2rem] bg-slate-950 px-5 py-10 sm:px-10 sm:py-12 lg:min-h-[calc(100dvh-11.5rem)]">
+              {/* Ambient glow */}
+              <div className="pointer-events-none absolute -top-40 left-1/2 h-[26rem] w-[46rem] -translate-x-1/2 rounded-full bg-blue-600/20 blur-3xl" />
+              <div className="pointer-events-none absolute -bottom-48 -right-24 h-96 w-96 rounded-full bg-sky-500/10 blur-3xl" />
+
+              <div className="relative mx-auto w-full max-w-4xl text-center">
+                {/* Status pill */}
+                <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-xs font-semibold text-slate-300 backdrop-blur-sm">
                   <span className="relative flex h-2 w-2">
-                    <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping"></span>
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
                     <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
                   </span>
-                  <span>Procesamiento efímero local · Tus fotos nunca se guardan</span>
+                  <span>Procesamiento local · Tus fotos nunca se guardan</span>
                 </div>
 
-                <h2 className="font-display text-5xl lg:text-[3.75rem] font-extrabold text-gray-900 tracking-tight leading-[1.08]">
-                  La solución líder para{' '}
-                  <span className="bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 bg-clip-text text-transparent">difuminar rostros</span>{' '}
-                  de forma automática y segura
+                <h2 className="mx-auto mt-6 max-w-3xl font-display text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-[3.4rem] lg:leading-[1.06]">
+                  Sube una foto.
+                  <br className="hidden sm:block" />{' '}
+                  La IA protege <span className="text-blue-400">cada rostro</span>.
                 </h2>
 
-                <p className="text-gray-600 text-lg leading-relaxed max-w-xl">
-                  El software profesional para anonimizar fotos al instante. Detecta y censura
-                  rostros automáticamente con IA de última generación — bajo estrictas normativas
-                  de privacidad.
+                <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-slate-400 sm:text-base">
+                  Detección y difuminado automático de caras en ~3 segundos. Sin Photoshop, sin
+                  instalar nada, sin almacenar tus imágenes.
                 </p>
 
-                {/* Credibility Stats */}
-                <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
-                  <div>
-                    <p className="text-2xl font-extrabold text-gray-900 tabular-nums tracking-tight">99.8%</p>
-                    <p className="text-xs text-gray-500 font-medium mt-0.5">Precisión de detección</p>
-                  </div>
-                  <div className="h-9 w-px bg-gray-200" />
-                  <div>
-                    <p className="text-2xl font-extrabold text-gray-900 tabular-nums tracking-tight">~3s</p>
-                    <p className="text-xs text-gray-500 font-medium mt-0.5">Por imagen</p>
-                  </div>
-                  <div className="h-9 w-px bg-gray-200" />
-                  <div>
-                    <p className="text-2xl font-extrabold text-gray-900 tracking-tight">GDPR · LOPD</p>
-                    <p className="text-xs text-gray-500 font-medium mt-0.5">Cumplimiento total</p>
-                  </div>
+                {/* CTAs */}
+                <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
+                  <button
+                    onClick={handleSignIn}
+                    className="inline-flex w-full items-center justify-center gap-2.5 rounded-2xl bg-blue-600 px-7 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-900/40 transition-all hover:bg-blue-500 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer sm:w-auto"
+                  >
+                    <LogIn className="h-4.5 w-4.5" />
+                    <span>Comenzar gratis con Google</span>
+                  </button>
+                  <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500">
+                    <ShieldCheck className="h-4 w-4 text-emerald-500" />
+                    Sin tarjeta · 10 fotos gratis
+                  </span>
                 </div>
 
-                {/* Proof Bulletins */}
-                <div className="grid grid-cols-2 gap-4 pt-2">
-                  <div className="flex items-start gap-3 p-4 rounded-2xl bg-indigo-50/60 border border-indigo-100/40 hover:bg-indigo-50 transition-all">
-                    <div className="p-2 bg-indigo-100 text-indigo-700 rounded-xl">
-                      <Sparkles className="h-5 w-5" />
+                {/* Before / After comparison slider — the product, live */}
+                <div className="relative mx-auto mt-9 w-full max-w-3xl select-none">
+                  <div className="relative aspect-[16/9] overflow-hidden rounded-2xl border border-white/10 bg-slate-900 shadow-2xl shadow-blue-950/50">
+                    {/* Original layer */}
+                    <DemoScene />
+                    {/* Protected layer, revealed right of the divider */}
+                    <div className="absolute inset-0" style={{ clipPath: `inset(0 0 0 ${revealPos}%)` }}>
+                      <DemoScene protectedMode />
                     </div>
-                    <div>
-                      <h4 className="text-sm font-bold text-indigo-950">Prueba de 24 Horas</h4>
-                      <p className="text-xs text-gray-500 mt-1">Acceso inmediato y sin límites a todas las funciones premium.</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3 p-4 rounded-2xl bg-emerald-50/60 border border-emerald-100/40 hover:bg-emerald-50 transition-all">
-                    <div className="p-2 bg-emerald-100 text-emerald-700 rounded-xl">
-                      <CheckCircle className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-bold text-emerald-950">10 Fotos Gratis</h4>
-                      <p className="text-xs text-gray-500 mt-1">Sube imágenes en lote o de forma individual de inmediato.</p>
-                    </div>
-                  </div>
-                </div>
 
-                {/* Interactive Trust Selling Points */}
-                <div className="border-t border-gray-100 pt-6 space-y-4">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-gray-400">¿Por qué es el software de censura más seguro?</h4>
-                  
-                  <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-xs text-gray-600">
-                    <div className="flex items-center gap-2.5">
-                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 font-bold text-[10px]">✓</span>
-                      <span><b>Cero Almacenamiento:</b> Las fotos nunca se guardan.</span>
-                    </div>
-                    <div className="flex items-center gap-2.5">
-                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 font-bold text-[10px]">✓</span>
-                      <span><b>Privacidad Certificada:</b> Cumple con GDPR / LOPD.</span>
-                    </div>
-                    <div className="flex items-center gap-2.5">
-                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 font-bold text-[10px]">✓</span>
-                      <span><b>Limpieza EXIF:</b> Borra metadatos de ubicación GPS.</span>
-                    </div>
-                    <div className="flex items-center gap-2.5">
-                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 font-bold text-[10px]">✓</span>
-                      <span><b>Procesamiento Local:</b> Ejecución fluida en memoria.</span>
-                    </div>
-                  </div>
-                </div>
+                    {/* Corner labels */}
+                    <span className="absolute left-3 top-3 rounded-md bg-slate-950/70 px-2 py-1 font-mono text-[10px] font-bold uppercase tracking-wider text-slate-300 backdrop-blur-sm">
+                      Original
+                    </span>
+                    <span className="absolute right-3 top-3 rounded-md bg-blue-600/90 px-2 py-1 font-mono text-[10px] font-bold uppercase tracking-wider text-white backdrop-blur-sm">
+                      Protegido con IA
+                    </span>
 
-                {/* Primary CTA Block */}
-                <div className="space-y-3 pt-2">
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <button
-                      onClick={handleSignIn}
-                      className="inline-flex items-center justify-center gap-2.5 rounded-2xl bg-gray-900 px-7 py-4 text-sm font-bold text-white shadow-xl shadow-gray-900/10 transition-all hover:bg-gray-800 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
+                    {/* Divider + handle */}
+                    <div
+                      className="pointer-events-none absolute inset-y-0 z-10 w-[3px] bg-white shadow-[0_0_12px_rgba(59,130,246,0.8)]"
+                      style={{ left: `calc(${revealPos}% - 1.5px)` }}
                     >
-                      <LogIn className="h-5 w-5" />
-                      <span>Comenzar gratis con Google</span>
-                    </button>
-                    <button
-                      onClick={() => window.scrollBy({ top: 640, behavior: 'smooth' })}
-                      className="inline-flex items-center justify-center gap-2 rounded-2xl border border-gray-200 bg-white px-6 py-4 text-sm font-semibold text-gray-700 transition-all hover:border-gray-300 hover:bg-gray-50 cursor-pointer"
-                    >
-                      Ver cómo funciona
-                    </button>
+                      <span className="absolute left-1/2 top-1/2 flex h-9 w-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white text-slate-900 shadow-xl">
+                        <ChevronsLeftRight className="h-4.5 w-4.5" />
+                      </span>
+                    </div>
+
+                    {/* Invisible range control on top */}
+                    <input
+                      type="range"
+                      min={4}
+                      max={96}
+                      value={revealPos}
+                      onChange={(e) => setRevealPos(Number(e.target.value))}
+                      aria-label="Comparar original y protegido"
+                      className="absolute inset-0 z-20 h-full w-full cursor-ew-resize opacity-0"
+                    />
                   </div>
-                  <p className="text-xs text-gray-400 font-medium flex items-center gap-1.5">
-                    <ShieldCheck className="h-4.5 w-4.5 text-emerald-500 shrink-0" />
-                    Sin datos de tarjeta. Tu privacidad está blindada desde el primer segundo.
+                  <p className="mt-3 text-xs font-medium text-slate-500">
+                    Arrastra el control para comparar — así funciona AutoBlur en tus fotos.
                   </p>
                 </div>
 
-              </div>
-
-              {/* Right Column: Immersive Real-Time Censorship Simulator */}
-              <div className="lg:col-span-5 flex flex-col items-center">
-                
-                <div className="relative w-full max-w-sm bg-white border border-gray-200 rounded-3xl p-6 shadow-2xl shadow-indigo-100/40 overflow-hidden">
-                  
-                  {/* Window Bar Decoration */}
-                  <div className="flex items-center justify-between border-b border-gray-100 pb-3 mb-4">
-                    <div className="flex items-center gap-1.5">
-                      <span className="h-2.5 w-2.5 rounded-full bg-red-400"></span>
-                      <span className="h-2.5 w-2.5 rounded-full bg-yellow-400"></span>
-                      <span className="h-2.5 w-2.5 rounded-full bg-green-400"></span>
-                      <span className="text-[10px] text-gray-400 font-mono ml-2 uppercase tracking-wider font-semibold">simulador_ia_env</span>
-                    </div>
-                    <div className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[9px] font-extrabold text-emerald-700 border border-emerald-100">
-                      <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
-                      PREVISUALIZADOR LIVE
-                    </div>
+                {/* Stats strip */}
+                <div className="mx-auto mt-8 flex max-w-xl flex-wrap items-center justify-center gap-x-10 gap-y-4">
+                  <div className="text-center">
+                    <p className="font-display text-xl font-extrabold tabular-nums text-white">99.8%</p>
+                    <p className="mt-0.5 text-[11px] font-medium text-slate-500">Precisión de detección</p>
                   </div>
-
-                  {/* Simulator Screen */}
-                  <div className="relative rounded-2xl aspect-square bg-slate-950 border border-slate-900 flex items-center justify-center overflow-hidden group">
-                    
-                    {/* SVG Portrait representing safe face */}
-                    <svg className="w-full h-full p-2 select-none" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <circle cx="200" cy="200" r="180" fill="#1e1b4b" fillOpacity="0.3" />
-                      <circle cx="200" cy="200" r="140" fill="#1e293b" />
-                      <circle cx="200" cy="180" r="65" fill="#fed7aa" />
-                      <path d="M135 180 C135 80, 265 80, 265 180 C265 200, 275 220, 275 230 C235 190, 165 190, 125 230 C125 220, 135 200, 135 180 Z" fill="#0f172a" />
-                      <path d="M145 155 C170 120, 230 120, 255 155" stroke="#0f172a" strokeWidth="15" strokeLinecap="round" />
-                      <path d="M165 165 C170 162, 180 162, 185 166" stroke="#0f172a" strokeWidth="3" strokeLinecap="round" />
-                      <path d="M215 166 C220 162, 230 162, 235 165" stroke="#0f172a" strokeWidth="3" strokeLinecap="round" />
-                      <circle cx="175" cy="176" r="6" fill="#0f172a" />
-                      <circle cx="225" cy="176" r="6" fill="#0f172a" />
-                      <circle cx="160" cy="195" r="8" fill="#f43f5e" fillOpacity="0.35" />
-                      <circle cx="240" cy="195" r="8" fill="#f43f5e" fillOpacity="0.35" />
-                      <path d="M188 206 Q200 218 212 206" stroke="#0f172a" strokeWidth="4.5" strokeLinecap="round" fill="none" />
-                      <path d="M120 320 C120 260, 280 260, 280 320" fill="#4f46e5" />
-                      <path d="M200 260 L200 290" stroke="#fed7aa" strokeWidth="18" strokeLinecap="round" />
-                    </svg>
-
-                    {/* Face tracking bounds marker */}
-                    <div className="absolute top-[28%] left-[29%] w-[42%] h-[42%] border-2 border-emerald-400 rounded-2xl pointer-events-none shadow-md shadow-emerald-500/20">
-                      <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-emerald-500 text-[8px] text-white font-mono font-extrabold px-1.5 py-0.5 rounded-md uppercase whitespace-nowrap shadow-sm tracking-wider">
-                        Rostro Detectado [99.8%]
-                      </div>
-                      
-                      {/* Dynamic censorship filters driven by simulator state */}
-                      <div className="absolute inset-0 rounded-xl overflow-hidden flex items-center justify-center transition-all duration-300">
-                        {demoFilter === 'gaussian' && (
-                          <div 
-                            className="w-full h-full bg-white/5 backdrop-blur-md" 
-                            style={{ backdropFilter: `blur(${demoIntensity / 1.5}px)`, WebkitBackdropFilter: `blur(${demoIntensity / 1.5}px)` }}
-                          />
-                        )}
-                        
-                        {demoFilter === 'pixel' && (
-                          <div className="absolute inset-0 w-full h-full flex flex-wrap" style={{ opacity: Math.min(1, demoIntensity / 15) }}>
-                            {Array.from({ length: 64 }).map((_, i) => (
-                              <div 
-                                key={i} 
-                                className="w-[12.5%] h-[12.5%] border-[0.5px] border-slate-900/10"
-                                style={{
-                                  backgroundColor: i % 4 === 0 ? '#ea580c' : i % 3 === 0 ? '#ffedd5' : i % 2 === 0 ? '#fdba74' : '#f97316'
-                                }}
-                              />
-                            ))}
-                          </div>
-                        )}
-
-                        {demoFilter === 'censored' && (
-                          <div 
-                            className="absolute bg-neutral-950 text-white font-mono text-[8px] font-black tracking-widest text-center py-1.5 shadow-lg border-y border-white/20 w-full scale-y-110 flex items-center justify-center"
-                            style={{ transform: `scale(${1 + (demoIntensity - 20) / 100})` }}
-                          >
-                            CENSURADO
-                          </div>
-                        )}
-                      </div>
-                    </div>
+                  <div className="h-8 w-px bg-white/10" />
+                  <div className="text-center">
+                    <p className="font-display text-xl font-extrabold tabular-nums text-white">~3s</p>
+                    <p className="mt-0.5 text-[11px] font-medium text-slate-500">Por imagen</p>
                   </div>
-
-                  {/* Mode Buttons */}
-                  <div className="mt-4 space-y-3.5">
-                    <div className="grid grid-cols-3 gap-1.5 bg-gray-50 p-1 rounded-xl border border-gray-100">
-                      <button 
-                        onClick={() => setDemoFilter('gaussian')}
-                        className={`py-2 px-1 text-[10px] font-bold rounded-lg transition-all cursor-pointer flex flex-col items-center gap-1 ${
-                          demoFilter === 'gaussian' ? 'bg-white text-indigo-700 shadow-sm border border-gray-150' : 'text-gray-500 hover:text-gray-900'
-                        }`}
-                      >
-                        <Droplet className="h-3.5 w-3.5" />
-                        <span>Gaussiano</span>
-                      </button>
-                      <button 
-                        onClick={() => setDemoFilter('pixel')}
-                        className={`py-2 px-1 text-[10px] font-bold rounded-lg transition-all cursor-pointer flex flex-col items-center gap-1 ${
-                          demoFilter === 'pixel' ? 'bg-white text-indigo-700 shadow-sm border border-gray-150' : 'text-gray-500 hover:text-gray-900'
-                        }`}
-                      >
-                        <Grid3x3 className="h-3.5 w-3.5" />
-                        <span>Mosaico</span>
-                      </button>
-                      <button 
-                        onClick={() => setDemoFilter('censored')}
-                        className={`py-2 px-1 text-[10px] font-bold rounded-lg transition-all cursor-pointer flex flex-col items-center gap-1 ${
-                          demoFilter === 'censored' ? 'bg-white text-indigo-700 shadow-sm border border-gray-150' : 'text-gray-500 hover:text-gray-900'
-                        }`}
-                      >
-                        <SquareStack className="h-3.5 w-3.5" />
-                        <span>Censura</span>
-                      </button>
-                    </div>
-
-                    {/* Interactive Slider */}
-                    <div className="space-y-1.5">
-                      <div className="flex justify-between text-[10px] font-bold text-gray-500">
-                        <span>Fuerza de Desenfoque</span>
-                        <span className="font-mono text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded">{demoIntensity}%</span>
-                      </div>
-                      <input 
-                        type="range" 
-                        min="10" 
-                        max="40" 
-                        value={demoIntensity}
-                        onChange={(e) => setDemoIntensity(Number(e.target.value))}
-                        className="w-full h-1 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-indigo-600"
-                      />
-                    </div>
-                  </div>
-
-                </div>
-
-              </div>
-
-            </div>
-
-            {/* =========================================================================
-                MOBILE-ONLY LAYOUT (block lg:hidden)
-                Fully optimized vertically, centering details for touch, speed & clarity.
-               ========================================================================= */}
-            <div className="block lg:hidden text-center space-y-8">
-              
-              {/* Symmetrical Security Badge */}
-              <div className="inline-flex items-center gap-2 rounded-full bg-white border border-gray-200/80 px-3.5 py-1.5 text-xs font-semibold text-gray-700 shadow-sm mx-auto">
-                <span className="relative flex h-2 w-2">
-                  <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping"></span>
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
-                </span>
-                <span>Procesamiento local · Tus fotos nunca se guardan</span>
-              </div>
-
-              {/* Impactful Heading */}
-              <div className="space-y-3">
-                <h2 className="font-display text-3xl sm:text-4xl font-extrabold text-gray-900 leading-[1.12]">
-                  Protege la privacidad de tus fotos en{' '}
-                  <span className="bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 bg-clip-text text-transparent">segundos</span>
-                </h2>
-                <p className="text-sm text-gray-500 leading-relaxed max-w-md mx-auto">
-                  La forma más rápida y segura de difuminar rostros de forma automática con inteligencia artificial. Tus archivos están protegidos en tu propio navegador.
-                </p>
-              </div>
-
-              {/* Compact Benefits Grid for Mobile */}
-              <div className="grid grid-cols-2 gap-2 max-w-sm mx-auto text-left">
-                <div className="p-3 bg-white border border-gray-150 rounded-xl flex items-center gap-2">
-                  <span className="text-indigo-500 font-bold text-sm">✦</span>
-                  <span className="text-[11px] font-bold text-gray-800">Prueba 24 Horas</span>
-                </div>
-                <div className="p-3 bg-white border border-gray-150 rounded-xl flex items-center gap-2">
-                  <span className="text-emerald-500 font-bold text-sm">✔</span>
-                  <span className="text-[11px] font-bold text-gray-800">10 Fotos Gratis</span>
-                </div>
-                <div className="p-3 bg-white border border-gray-150 rounded-xl flex items-center gap-2">
-                  <span className="text-emerald-500 font-bold text-sm">✔</span>
-                  <span className="text-[11px] font-bold text-gray-800">Cero Servidores</span>
-                </div>
-                <div className="p-3 bg-white border border-gray-150 rounded-xl flex items-center gap-2">
-                  <span className="text-indigo-500 font-bold text-sm">✦</span>
-                  <span className="text-[11px] font-bold text-gray-800">Borrado de EXIF</span>
-                </div>
-              </div>
-
-              {/* Mobile Simulator (Compact and highly interactive) */}
-              <div className="bg-white border border-gray-150 rounded-2xl p-4 max-w-xs mx-auto shadow-lg space-y-3">
-                <div className="flex justify-between items-center text-[10px] text-gray-400 font-bold uppercase tracking-wider">
-                  <span>Demo Interactiva</span>
-                  <span className="text-indigo-600 font-mono bg-indigo-50 px-1 rounded">Filtro: {demoFilter}</span>
-                </div>
-
-                <div className="relative aspect-square rounded-xl bg-indigo-950/20 overflow-hidden flex items-center justify-center">
-                  {/* Miniature portrait background with custom blur effect */}
-                  <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-orange-100 via-indigo-900 to-indigo-950 opacity-90"></div>
-                  
-                  {/* Simulated Face Area */}
-                  <div className="relative w-28 h-28 border border-emerald-400 rounded-full flex items-center justify-center overflow-hidden">
-                    <div className="absolute inset-0 rounded-full overflow-hidden">
-                      {demoFilter === 'gaussian' && (
-                        <div 
-                          className="w-full h-full bg-orange-300/40 backdrop-blur-md" 
-                          style={{ backdropFilter: `blur(${demoIntensity / 2}px)`, WebkitBackdropFilter: `blur(${demoIntensity / 2}px)` }}
-                        />
-                      )}
-                      {demoFilter === 'pixel' && (
-                        <div className="w-full h-full bg-orange-400/90 flex flex-wrap">
-                          {Array.from({ length: 16 }).map((_, i) => (
-                            <div key={i} className="w-1/4 h-1/4 bg-orange-500/80 border-[0.5px] border-slate-950/25" />
-                          ))}
-                        </div>
-                      )}
-                      {demoFilter === 'censored' && (
-                        <div className="absolute inset-x-0 h-6 bg-black text-white text-[7px] font-mono tracking-widest flex items-center justify-center font-bold">
-                          CENSURADO
-                        </div>
-                      )}
-                    </div>
-                    {/* Portrait Outline */}
-                    <div className="absolute top-1/2 -translate-y-1/2 text-center text-emerald-400 font-bold text-[8px] tracking-wider uppercase bg-slate-900/85 px-1.5 py-0.5 rounded-full border border-emerald-400/30 shadow-sm">
-                      Filtro Activo
-                    </div>
+                  <div className="h-8 w-px bg-white/10" />
+                  <div className="text-center">
+                    <p className="font-display text-xl font-extrabold text-white">GDPR · LOPD</p>
+                    <p className="mt-0.5 text-[11px] font-medium text-slate-500">Cumplimiento total</p>
                   </div>
                 </div>
-
-                {/* Mobile Filter Toggles */}
-                <div className="grid grid-cols-3 gap-1 bg-gray-50 p-0.5 rounded-lg border border-gray-100">
-                  <button 
-                    onClick={() => setDemoFilter('gaussian')}
-                    className={`py-1 px-0.5 text-[9px] font-bold rounded transition-all cursor-pointer ${demoFilter === 'gaussian' ? 'bg-white text-indigo-700 shadow-sm' : 'text-gray-500'}`}
-                  >
-                    Gaussiano
-                  </button>
-                  <button 
-                    onClick={() => setDemoFilter('pixel')}
-                    className={`py-1 px-0.5 text-[9px] font-bold rounded transition-all cursor-pointer ${demoFilter === 'pixel' ? 'bg-white text-indigo-700 shadow-sm' : 'text-gray-500'}`}
-                  >
-                    Mosaico
-                  </button>
-                  <button 
-                    onClick={() => setDemoFilter('censored')}
-                    className={`py-1 px-0.5 text-[9px] font-bold rounded transition-all cursor-pointer ${demoFilter === 'censored' ? 'bg-white text-indigo-700 shadow-sm' : 'text-gray-500'}`}
-                  >
-                    Barra
-                  </button>
-                </div>
               </div>
-
-              {/* Mobile High-Contrast CTA */}
-              <div className="space-y-4 pt-2">
-                <button
-                  onClick={handleSignIn}
-                  className="w-full max-w-xs inline-flex items-center justify-center gap-2.5 rounded-2xl bg-gray-900 px-6 py-4 text-sm font-bold text-white shadow-xl shadow-gray-900/10 transition-all hover:bg-gray-800 active:scale-97 cursor-pointer mx-auto"
-                >
-                  <LogIn className="h-4.5 w-4.5" />
-                  <span>Comenzar gratis con Google</span>
-                </button>
-                <div className="flex items-center justify-center gap-1.5 text-xs text-gray-500 max-w-xs mx-auto">
-                  <ShieldCheck className="h-4.5 w-4.5 text-emerald-500 shrink-0" />
-                  <span>Iniciar sesión inmediato con Google</span>
-                </div>
-              </div>
-
-            </div>
+            </section>
 
             {/* =========================================================================
                 BENEFITS SECTION & VALUE PROP (SHARED - WITH DESKTOP/MOBILE PAIRINGS)
@@ -1124,7 +907,7 @@ export default function App() {
 
                 {/* Security Feature 2 */}
                 <div className="bg-white border border-gray-150/60 rounded-3xl p-6 sm:p-7 shadow-xs hover:shadow-md transition-all text-left">
-                  <div className="h-11 w-11 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-5 border border-indigo-100">
+                  <div className="h-11 w-11 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mb-5 border border-blue-100">
                     <Lock className="h-5.5 w-5.5" />
                   </div>
                   <h4 className="font-display text-sm sm:text-base font-extrabold text-gray-900">Eliminación Inteligente de EXIF</h4>
@@ -1135,7 +918,7 @@ export default function App() {
 
                 {/* Security Feature 3 */}
                 <div className="bg-white border border-gray-150/60 rounded-3xl p-6 sm:p-7 shadow-xs hover:shadow-md transition-all text-left">
-                  <div className="h-11 w-11 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center mb-5 border border-purple-100">
+                  <div className="h-11 w-11 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center mb-5 border border-sky-100">
                     <Eye className="h-5.5 w-5.5" />
                   </div>
                   <h4 className="font-display text-sm sm:text-base font-extrabold text-gray-900">Optimizado para Lotes Grandes</h4>
@@ -1152,7 +935,7 @@ export default function App() {
                ========================================================================= */}
             <div className="mt-16 sm:mt-24 border-t border-gray-150 pt-10 sm:pt-16">
               <div className="max-w-2xl mx-auto text-center space-y-3 mb-10 sm:mb-14">
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-indigo-600">Cómo funciona</p>
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-600">Cómo funciona</p>
                 <h3 className="font-display text-2xl sm:text-3xl font-extrabold text-gray-900 leading-tight">
                   Tres pasos. Segundos. Cero esfuerzo.
                 </h3>
@@ -1166,7 +949,7 @@ export default function App() {
                 ].map((step) => (
                   <div key={step.n} className="relative bg-white border border-gray-150/60 rounded-3xl p-6 sm:p-7 shadow-xs hover:shadow-md transition-all text-left overflow-hidden">
                     <span className="absolute top-4 right-5 font-display text-5xl font-extrabold text-gray-100 select-none">{step.n}</span>
-                    <div className="relative h-11 w-11 rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-600 text-white flex items-center justify-center mb-5 shadow-lg shadow-indigo-200/50">
+                    <div className="relative h-11 w-11 rounded-2xl bg-gradient-to-br from-blue-600 to-sky-500 text-white flex items-center justify-center mb-5 shadow-lg shadow-blue-200/50">
                       <step.icon className="h-5 w-5" />
                     </div>
                     <h4 className="relative font-display text-sm sm:text-base font-extrabold text-gray-900">{step.title}</h4>
@@ -1181,7 +964,7 @@ export default function App() {
                ========================================================================= */}
             <div className="mt-16 sm:mt-24 border-t border-gray-150 pt-10 sm:pt-16">
               <div className="max-w-2xl mx-auto text-center space-y-3 mb-10 sm:mb-14">
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-indigo-600">Precios simples</p>
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-600">Precios simples</p>
                 <h3 className="font-display text-2xl sm:text-3xl font-extrabold text-gray-900 leading-tight">
                   Paga solo por lo que necesitas
                 </h3>
@@ -1205,23 +988,23 @@ export default function App() {
                     }`}
                   >
                     {p.featured && (
-                      <span className="absolute top-0 right-6 -translate-y-1/2 rounded-full bg-gradient-to-r from-indigo-500 to-violet-500 px-3 py-0.5 text-[10px] font-extrabold text-white uppercase tracking-wider">
+                      <span className="absolute top-0 right-6 -translate-y-1/2 rounded-full bg-gradient-to-r from-blue-600 to-sky-500 px-3 py-0.5 text-[10px] font-extrabold text-white uppercase tracking-wider">
                         Mejor valor
                       </span>
                     )}
-                    <h4 className={`text-xs font-extrabold uppercase tracking-wider ${p.featured ? 'text-indigo-300' : 'text-indigo-600'}`}>Plan {p.name}</h4>
+                    <h4 className={`text-xs font-extrabold uppercase tracking-wider ${p.featured ? 'text-blue-300' : 'text-blue-600'}`}>Plan {p.name}</h4>
                     <div className="mt-3 flex items-baseline gap-1">
                       <span className="font-display text-4xl font-extrabold tracking-tight">{p.price}</span>
                       <span className={`text-xs font-semibold ${p.featured ? 'text-gray-400' : 'text-gray-500'}`}>{p.unit}</span>
                     </div>
                     <div className={`mt-5 flex items-center gap-2 text-sm font-semibold ${p.featured ? 'text-white' : 'text-gray-800'}`}>
-                      <CheckCircle className={`h-4 w-4 ${p.featured ? 'text-indigo-300' : 'text-emerald-500'}`} />
+                      <CheckCircle className={`h-4 w-4 ${p.featured ? 'text-blue-300' : 'text-emerald-500'}`} />
                       {p.imgs}
                     </div>
                     <ul className={`mt-3 space-y-2 text-xs ${p.featured ? 'text-gray-300' : 'text-gray-500'}`}>
-                      <li className="flex items-center gap-2"><CheckCircle className={`h-3.5 w-3.5 ${p.featured ? 'text-indigo-300' : 'text-emerald-500'}`} />Sin marcas de agua</li>
-                      <li className="flex items-center gap-2"><CheckCircle className={`h-3.5 w-3.5 ${p.featured ? 'text-indigo-300' : 'text-emerald-500'}`} />Formatos PRO (HEIC, TIFF…)</li>
-                      <li className="flex items-center gap-2"><CheckCircle className={`h-3.5 w-3.5 ${p.featured ? 'text-indigo-300' : 'text-emerald-500'}`} />Procesamiento local seguro</li>
+                      <li className="flex items-center gap-2"><CheckCircle className={`h-3.5 w-3.5 ${p.featured ? 'text-blue-300' : 'text-emerald-500'}`} />Sin marcas de agua</li>
+                      <li className="flex items-center gap-2"><CheckCircle className={`h-3.5 w-3.5 ${p.featured ? 'text-blue-300' : 'text-emerald-500'}`} />Formatos PRO (HEIC, TIFF…)</li>
+                      <li className="flex items-center gap-2"><CheckCircle className={`h-3.5 w-3.5 ${p.featured ? 'text-blue-300' : 'text-emerald-500'}`} />Procesamiento local seguro</li>
                     </ul>
                     <button
                       onClick={handleSignIn}
@@ -1242,14 +1025,14 @@ export default function App() {
                 FINAL CTA
                ========================================================================= */}
             <div className="mt-16 sm:mt-24">
-              <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-indigo-600 via-violet-600 to-indigo-700 px-6 py-12 sm:px-12 sm:py-16 text-center shadow-2xl shadow-indigo-300/40">
+              <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-blue-700 via-blue-600 to-sky-600 px-6 py-12 sm:px-12 sm:py-16 text-center shadow-2xl shadow-blue-300/40">
                 <div className="absolute -top-20 -right-16 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
-                <div className="absolute -bottom-24 -left-16 h-64 w-64 rounded-full bg-fuchsia-400/20 blur-3xl" />
+                <div className="absolute -bottom-24 -left-16 h-64 w-64 rounded-full bg-sky-400/20 blur-3xl" />
                 <div className="relative">
                   <h3 className="font-display text-2xl sm:text-4xl font-extrabold text-white tracking-tight max-w-2xl mx-auto leading-tight">
                     Protege la privacidad de tus fotos hoy mismo
                   </h3>
-                  <p className="mt-3 text-sm sm:text-base text-indigo-100 max-w-lg mx-auto">
+                  <p className="mt-3 text-sm sm:text-base text-blue-100 max-w-lg mx-auto">
                     Empieza gratis en segundos. Sin tarjeta, sin instalaciones.
                   </p>
                   <button
@@ -1273,9 +1056,9 @@ export default function App() {
           AutoBlur.ai © {new Date().getFullYear()} — Diseñado con precisión para una privacidad inteligente
         </p>
         <div className="mt-2 flex items-center justify-center gap-4 text-[11px] text-gray-400">
-          <a href="/privacidad" className="hover:text-indigo-600 transition-colors">Política de Privacidad</a>
+          <a href="/privacidad" className="hover:text-blue-600 transition-colors">Política de Privacidad</a>
           <span>·</span>
-          <a href="/terminos" className="hover:text-indigo-600 transition-colors">Términos y Condiciones</a>
+          <a href="/terminos" className="hover:text-blue-600 transition-colors">Términos y Condiciones</a>
         </div>
       </footer>
 
