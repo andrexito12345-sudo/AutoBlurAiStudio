@@ -88,31 +88,31 @@ export default function ImageItem({
   const displayUrl = viewOriginal ? task.originalUrl : (task.processedUrl || task.originalUrl);
 
   return (
-    <div className="flex flex-col lg:flex-row gap-5 rounded-3xl border border-gray-100 bg-white p-5 shadow-sm hover:shadow-md transition-all duration-300">
+    <div className="flex flex-col lg:flex-row gap-5 rounded-xl border border-slate-200/80 bg-white p-5 shadow-xs hover:shadow-sm hover:border-slate-300 transition-all duration-300 text-left">
       
       {/* Thumbnail Container */}
       <div 
         onClick={() => { if (task.status === 'completed') setIsLightboxOpen(true); }}
-        className={`relative aspect-[4/3] w-full lg:w-52 rounded-2xl overflow-hidden bg-gray-50 border border-gray-100 group shrink-0 ${task.status === 'completed' ? 'cursor-zoom-in' : ''}`}
+        className={`relative aspect-[4/3] w-full lg:w-52 rounded-xl overflow-hidden bg-slate-50 border border-slate-100/80 group shrink-0 ${task.status === 'completed' ? 'cursor-zoom-in' : ''}`}
       >
         <img
           src={displayUrl}
           alt={task.name}
           referrerPolicy="no-referrer"
-          className="h-full w-full object-contain transition-all duration-300 group-hover:scale-[1.01]"
+          className="h-full w-full object-contain transition-all duration-300 group-hover:scale-[1.015]"
         />
 
         {/* Hover Zoom-in cue for completed images */}
         {task.status === 'completed' && (
-          <div className="absolute inset-0 bg-gray-900/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
-            <span className="flex items-center gap-1.5 rounded-full bg-white/90 backdrop-blur-md px-3 py-1.5 text-[11px] font-bold text-gray-800 shadow-lg">
-              <Maximize2 className="h-3.5 w-3.5 text-indigo-600" />
+          <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+            <span className="flex items-center gap-1.5 rounded-full bg-white/95 backdrop-blur-md px-3.5 py-2 text-[10px] font-extrabold text-slate-800 shadow-lg">
+              <Maximize2 className="h-3.5 w-3.5 text-blue-600" />
               <span>Comparar y Ajustar</span>
             </span>
           </div>
         )}
 
-        {/* View Toggle Overlay (only when processedUrl exists and not hovering inside card) */}
+        {/* View Toggle Overlay */}
         {task.processedUrl && !isLightboxOpen && (
           <button
             onMouseDown={() => setViewOriginal(true)}
@@ -121,7 +121,7 @@ export default function ImageItem({
             onTouchStart={() => setViewOriginal(true)}
             onTouchEnd={() => setViewOriginal(false)}
             onClick={(e) => e.stopPropagation()}
-            className="absolute bottom-3 left-3 flex items-center gap-1 rounded-lg bg-gray-900/80 backdrop-blur-xs px-2 py-1 text-[9px] font-bold text-white uppercase tracking-wider select-none active:bg-indigo-600 transition-all cursor-pointer"
+            className="absolute bottom-3 left-3 flex items-center gap-1.5 rounded-lg bg-slate-900/90 backdrop-blur-sm px-2.5 py-1.5 text-[9px] font-extrabold text-white uppercase tracking-wider select-none active:bg-blue-600 transition-all cursor-pointer"
             title="Mantén pulsado para comparar con el original"
           >
             {viewOriginal ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
@@ -132,20 +132,20 @@ export default function ImageItem({
         {/* Status Badges Overlay */}
         <div className="absolute top-3 left-3 flex gap-1.5 flex-wrap">
           {task.status === 'completed' && (
-            <span className="flex items-center gap-1 rounded-md bg-emerald-500 px-2 py-0.5 text-[9px] font-bold text-white uppercase tracking-wider shadow-sm">
+            <span className="flex items-center gap-1 rounded-md bg-emerald-600 px-2 py-0.5 text-[9px] font-bold text-white uppercase tracking-wider shadow-sm">
               <Check className="h-3 w-3" />
               <span>{task.facesCount} Rostros</span>
             </span>
           )}
           {task.status === 'failed' && (
-            <span className="flex items-center gap-1 rounded-md bg-red-500 px-2 py-0.5 text-[9px] font-bold text-white uppercase tracking-wider shadow-sm">
+            <span className="flex items-center gap-1 rounded-md bg-red-600 px-2 py-0.5 text-[9px] font-bold text-white uppercase tracking-wider shadow-sm">
               <AlertTriangle className="h-3 w-3" />
               <span>Error</span>
             </span>
           )}
           {(task.status === 'detecting' || task.status === 'blurring' || isProcessingLocal) && (
-            <span className="flex items-center gap-1 rounded-md bg-indigo-600 px-2 py-0.5 text-[9px] font-bold text-white uppercase tracking-wider animate-pulse shadow-sm">
-              <Loader2 className="h-3 w-3 animate-spin" />
+            <span className="flex items-center gap-1 rounded-md bg-slate-900 px-2 py-0.5 text-[9px] font-bold text-white uppercase tracking-wider animate-pulse shadow-sm">
+              <Loader2 className="h-3 w-3 animate-spin text-blue-400" />
               <span>{task.status === 'detecting' ? 'Analizando IA...' : 'Difuminando...'}</span>
             </span>
           )}
@@ -153,21 +153,21 @@ export default function ImageItem({
       </div>
 
       {/* Control Panel / Metadata */}
-      <div className="flex flex-col justify-between flex-1 gap-4">
+      <div className="flex flex-col justify-between flex-1 gap-4 text-left">
         <div>
           {/* Metadata Header */}
           <div className="flex items-start justify-between gap-2">
             <div>
-              <h4 className="text-sm font-bold text-gray-800 truncate max-w-[200px] sm:max-w-xs md:max-w-md" title={task.name}>
+              <h4 className="text-sm font-extrabold text-slate-800 truncate max-w-[200px] sm:max-w-xs md:max-w-md" title={task.name}>
                 {task.name}
               </h4>
               <div className="flex items-center gap-2 mt-0.5">
-                <span className="text-[10px] text-gray-400 font-medium">{formatSize(task.size)}</span>
+                <span className="text-[10px] text-slate-400 font-bold">{formatSize(task.size)}</span>
                 {task.facesCount !== undefined && task.status === 'completed' && (
                   <>
-                    <span className="text-gray-300 text-[10px]">•</span>
-                    <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-1.5 py-0.2 rounded-sm">
-                      Detección exitosa ({task.facesCount} {task.facesCount === 1 ? 'rostro' : 'rostros'})
+                    <span className="text-slate-300 text-[10px]">•</span>
+                    <span className="text-[10px] font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100/50">
+                      Anonimización completada ({task.facesCount} {task.facesCount === 1 ? 'rostro' : 'rostros'})
                     </span>
                   </>
                 )}
@@ -176,7 +176,7 @@ export default function ImageItem({
             
             <button
               onClick={() => onRemove(task.id)}
-              className="rounded-xl p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all cursor-pointer"
+              className="rounded-xl p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all cursor-pointer"
               title="Eliminar de la cola"
             >
               <Trash2 className="h-4.5 w-4.5" />
@@ -184,62 +184,62 @@ export default function ImageItem({
           </div>
 
           {/* Config Sliders & Style Presets */}
-          <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-gray-100 pt-4">
+          <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-slate-100 pt-4">
             
             {/* Style Picker */}
             <div>
-              <label className="text-[10px] font-bold uppercase tracking-wider text-gray-400 flex items-center gap-1">
-                <Sliders className="h-3.5 w-3.5 text-gray-400" />
-                Estilo de Difuminado
+              <label className="text-[9px] font-extrabold uppercase tracking-widest text-slate-400 flex items-center gap-1">
+                <Sliders className="h-3.5 w-3.5 text-slate-450" />
+                Estilo de Censura
               </label>
-              <div className="mt-1.5 grid grid-cols-3 gap-1 rounded-xl bg-gray-100 p-1 border border-gray-200/50">
+              <div className="mt-1.5 grid grid-cols-3 gap-1 rounded-xl bg-slate-100 p-1 border border-slate-200/50">
                 <button
                   onClick={() => setBlurStyle('gaussian')}
-                  className={`rounded-lg py-1 text-[10px] font-bold transition-all cursor-pointer ${
+                  className={`rounded-lg py-1.5 text-[10px] font-bold transition-all cursor-pointer ${
                     blurStyle === 'gaussian'
-                      ? 'bg-white text-gray-900 shadow-xs border border-gray-200/20'
-                      : 'text-gray-500 hover:text-gray-900'
+                      ? 'bg-white text-slate-900 shadow-xs border border-slate-200/20'
+                      : 'text-slate-500 hover:text-slate-900'
                   }`}
                 >
-                  Gaussian
+                  Gaussiano
                 </button>
                 <button
                   onClick={() => setBlurStyle('pixelated')}
-                  className={`rounded-lg py-1 text-[10px] font-bold transition-all cursor-pointer ${
+                  className={`rounded-lg py-1.5 text-[10px] font-bold transition-all cursor-pointer ${
                     blurStyle === 'pixelated'
-                      ? 'bg-white text-gray-900 shadow-xs border border-gray-200/20'
-                      : 'text-gray-500 hover:text-gray-900'
+                      ? 'bg-white text-slate-900 shadow-xs border border-slate-200/20'
+                      : 'text-slate-500 hover:text-slate-900'
                   }`}
                 >
                   Mosaico
                 </button>
                 <button
                   onClick={() => setBlurStyle('censored')}
-                  className={`rounded-lg py-1 text-[10px] font-bold transition-all cursor-pointer ${
+                  className={`rounded-lg py-1.5 text-[10px] font-bold transition-all cursor-pointer ${
                     blurStyle === 'censored'
-                      ? 'bg-white text-gray-900 shadow-xs border border-gray-200/20'
-                      : 'text-gray-500 hover:text-gray-900'
+                      ? 'bg-white text-slate-900 shadow-xs border border-slate-200/20'
+                      : 'text-slate-500 hover:text-slate-900'
                   }`}
                 >
-                  Censurado
+                  Barra Negra
                 </button>
               </div>
             </div>
 
             {/* Intensity Slider */}
             <div>
-              <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400 flex justify-between">
-                <span>Intensidad de Difuminado</span>
-                <span className="text-indigo-600 font-extrabold">{intensity}px</span>
+              <div className="text-[9px] font-extrabold uppercase tracking-widest text-slate-400 flex justify-between">
+                <span>Intensidad del efecto</span>
+                <span className="text-blue-600 font-extrabold">{intensity}px</span>
               </div>
               <input
                 type="range"
                 min="3"
-                max="45"
+                max="60"
                 disabled={blurStyle === 'censored'}
                 value={intensity}
                 onChange={(e) => setIntensity(Number(e.target.value))}
-                className="mt-3.5 w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600 disabled:opacity-30 disabled:cursor-not-allowed"
+                className="mt-3.5 w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-slate-900 disabled:opacity-30 disabled:cursor-not-allowed"
               />
             </div>
 
@@ -247,26 +247,26 @@ export default function ImageItem({
         </div>
 
         {/* Action Button Bar */}
-        <div className="flex flex-wrap items-center gap-2.5 border-t border-gray-100 pt-4">
+        <div className="flex flex-wrap items-center gap-2.5 border-t border-slate-100 pt-4">
           {task.status === 'idle' || task.status === 'failed' ? (
             <button
               onClick={isBlocked ? onOpenBilling : handleStartProcess}
               disabled={isProcessingLocal}
-              className={`flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-bold text-white shadow-md transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 rounded-xl px-4.5 py-2.5 text-xs font-bold text-white shadow-sm transition-all cursor-pointer ${
                 isBlocked 
-                  ? 'bg-gray-400 hover:bg-indigo-600 shadow-gray-100 hover:shadow-indigo-150' 
-                  : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-100 active:scale-97'
+                  ? 'bg-slate-400 hover:bg-slate-500 shadow-slate-100' 
+                  : 'bg-slate-900 hover:bg-slate-800 shadow-slate-200 active:scale-97'
               }`}
             >
               {isBlocked ? <Lock className="h-3.5 w-3.5" /> : <Sparkles className="h-3.5 w-3.5" />}
-              <span>{isBlocked ? 'Desbloquear con Premium' : 'Procesar Automáticamente con IA'}</span>
+              <span>{isBlocked ? 'Desbloquear con Premium' : 'Procesar con Inteligencia Artificial'}</span>
             </button>
           ) : task.status === 'completed' ? (
             <>
               {/* Compare and Zoom Action */}
               <button
                 onClick={() => setIsLightboxOpen(true)}
-                className="flex items-center gap-1.5 rounded-xl border border-indigo-150 bg-indigo-50/50 hover:bg-indigo-50 px-4 py-2.5 text-xs font-bold text-indigo-700 transition-all active:scale-97 cursor-pointer"
+                className="flex items-center gap-1.5 rounded-xl border border-slate-250 bg-slate-50 hover:bg-slate-100 px-4 py-2.5 text-xs font-extrabold text-slate-700 transition-all active:scale-97 cursor-pointer"
               >
                 <Maximize2 className="h-3.5 w-3.5" />
                 <span>Comparar e Inspeccionar</span>
@@ -287,12 +287,12 @@ export default function ImageItem({
                 onClick={handleForceRegenerate}
                 disabled={isProcessingLocal}
                 title="Vuelve a correr el modelo de IA para detectar rostros desde cero"
-                className="flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 px-3.5 py-2.5 text-xs font-semibold text-gray-700 transition-all active:scale-97 cursor-pointer disabled:opacity-50"
+                className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 px-3.5 py-2.5 text-xs font-bold text-slate-600 transition-all active:scale-97 cursor-pointer disabled:opacity-50"
               >
                 {isProcessingLocal ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin text-gray-500" />
+                  <Loader2 className="h-3.5 w-3.5 animate-spin text-slate-500" />
                 ) : (
-                  <RefreshCw className="h-3.5 w-3.5 text-gray-500" />
+                  <RefreshCw className="h-3.5 w-3.5 text-slate-500" />
                 )}
                 <span>Regenerar Rostros con IA</span>
               </button>
@@ -300,7 +300,7 @@ export default function ImageItem({
           ) : (
             <button
               disabled
-              className="flex items-center gap-1.5 rounded-xl bg-gray-100 px-4 py-2.5 text-xs font-bold text-gray-400 cursor-not-allowed"
+              className="flex items-center gap-1.5 rounded-xl bg-slate-100 px-4 py-2.5 text-xs font-bold text-slate-400 cursor-not-allowed"
             >
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
               <span>{task.status === 'detecting' ? 'Corriendo Detección...' : 'Aplicando Filtros...'}</span>
@@ -437,7 +437,7 @@ export default function ImageItem({
                   <input
                     type="range"
                     min="3"
-                    max="45"
+                    max="60"
                     disabled={blurStyle === 'censored'}
                     value={intensity}
                     onChange={(e) => setIntensity(Number(e.target.value))}
